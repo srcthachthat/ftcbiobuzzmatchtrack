@@ -1,10 +1,33 @@
 import { r as React, u as useNavigate, L as Link } from "./vendor-react-BrRUuK2M.js";
-import { u as useAuth, R as ROUTES, j as u } from "./index-CrUxzRby.js";
+import { u as useAuth, R as ROUTES, j as u, y as toast } from "./index-CrUxzRby.js";
 import { I as Input } from "./input-CclZpOgs.js";
 import { L as Label } from "./label-Dv6L1btQ.js";
 
+function formatAuthError(err) {
+  const code = err?.code || "";
+  if (code === "auth/operation-not-allowed") {
+    return "Đăng nhập Google chưa được bật trên Firebase! Hãy vào Firebase -> Authentication -> Sign-in method (Connection method) -> bấm vào Google -> gạt nút Enable (góc trên bên phải) -> chọn Email -> bấm Save.";
+  }
+  if (code === "auth/unauthorized-domain") {
+    return `Tên miền (${window.location.hostname}) chưa được thêm vào Firebase -> Authentication -> Settings -> Authorized domains.`;
+  }
+  if (code === "auth/popup-blocked") {
+    return "Trình duyệt đã chặn cửa sổ bật lên (Popup). Hãy cho phép Popup trên trang này rồi bấm lại.";
+  }
+  if (code === "auth/popup-closed-by-user" || code === "auth/cancelled-popup-request") {
+    return "Cửa sổ đăng nhập Google đã bị đóng trước khi hoàn tất.";
+  }
+  if (code === "auth/email-already-in-use") {
+    return "Email này đã được đăng ký. Hãy chuyển sang trang Sign in.";
+  }
+  if (code === "auth/weak-password") {
+    return "Mật khẩu phải có ít nhất 6 ký tự.";
+  }
+  return err?.message || "Đăng ký thất bại. Vui lòng thử lại.";
+}
+
 const Signup = () => {
-  const { signup, loginWithGoogle } = useAuth();
+  const { user, signup, loginWithGoogle } = useAuth();
   const navigate = useNavigate();
   const [name, setName] = React.useState("");
   const [email, setEmail] = React.useState("");
@@ -12,19 +35,31 @@ const Signup = () => {
   const [confirmPassword, setConfirmPassword] = React.useState("");
   const [showPassword, setShowPassword] = React.useState(false);
   const [loading, setLoading] = React.useState(false);
+  const [errorMsg, setErrorMsg] = React.useState("");
+
+  React.useEffect(() => {
+    if (user) {
+      navigate(ROUTES.ACTIVE, { replace: true });
+    }
+  }, [user, navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setErrorMsg("");
     if (password !== confirmPassword) {
-      alert("Passwords do not match!");
+      setErrorMsg("Mật khẩu xác nhận không khớp!");
       return;
     }
     setLoading(true);
     try {
       await signup(email, password, name);
+      toast.success("Account created!");
       navigate(ROUTES.ACTIVE);
     } catch (err) {
       console.error("Signup error:", err);
+      const msg = formatAuthError(err);
+      setErrorMsg(msg);
+      toast.error(msg);
     } finally {
       setLoading(false);
     }
@@ -37,8 +72,12 @@ const Signup = () => {
       style: { backgroundColor: "#0c0c0c", borderColor: "#DAA520", color: "#ffffff", boxShadow: "0 12px 36px rgba(0, 0, 0, 0.92)" },
       children: [
         u.jsx("h1", {
-          className: "text-4xl font-montserrat italic text-white text-center mb-8",
+          className: "text-4xl font-montserrat italic text-white text-center mb-6",
           children: "Create an account"
+        }),
+        errorMsg && u.jsx("div", {
+          className: "p-3 rounded-lg border border-red-500/80 bg-red-950/80 text-red-200 text-xs leading-relaxed",
+          children: errorMsg
         }),
         u.jsxs("form", {
           onSubmit: handleSubmit,
@@ -161,11 +200,16 @@ const Signup = () => {
         u.jsxs("button", {
           type: "button",
           onClick: async () => {
+            setErrorMsg("");
             try {
               await loginWithGoogle();
+              toast.success("Signed in with Google!");
               navigate(ROUTES.ACTIVE);
             } catch (e) {
-              console.error(e);
+              console.error("Google sign-in error:", e);
+              const msg = formatAuthError(e);
+              setErrorMsg(msg);
+              toast.error(msg);
             }
           },
           className: "w-full h-12 rounded-md border border-[#DAA520] text-white flex items-center justify-center gap-2 hover:bg-[#DAA520]/10 transition-colors",
