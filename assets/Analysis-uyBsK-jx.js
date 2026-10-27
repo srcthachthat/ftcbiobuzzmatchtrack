@@ -9,6 +9,7 @@ import {
   F as setGuestSessions,
   i as firebaseService,
   u as useAuth,
+  ar as useSession,
   R as ROUTES,
   d as getBreakdown,
   D as getMatchScore,
@@ -25,6 +26,37 @@ import {
   y as toast,
   j as u
 } from "./index-CrUxzRby.js";
+
+function readLocalSavedSessions() {
+  const map = new Map();
+  try {
+    const v2Raw = localStorage.getItem("src28785-saved-sessions-v2");
+    const v2List = v2Raw ? JSON.parse(v2Raw) : [];
+    if (Array.isArray(v2List)) {
+      for (const s of v2List) {
+        if (s && s.id) map.set(s.id, s);
+      }
+    }
+  } catch {}
+  try {
+    const guestList = getGuestSessions() || [];
+    if (Array.isArray(guestList)) {
+      for (const s of guestList) {
+        if (s && s.id && !map.has(s.id)) map.set(s.id, s);
+      }
+    }
+  } catch {}
+  return [...map.values()];
+}
+
+function writeLocalSavedSessions(list) {
+  try {
+    localStorage.setItem("src28785-saved-sessions-v2", JSON.stringify(list));
+  } catch {}
+  try {
+    setGuestSessions(list);
+  } catch {}
+}
 
 function formatFullDate(session) {
   try {
@@ -433,34 +465,50 @@ const Analysis = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
+  const { replaceSessionData, setHasStarted } = useSession();
 
-  const sessionId = React.useMemo(() => {
+  const { sessionId, initialTab } = React.useMemo(() => {
     const params = new URLSearchParams(location.search);
-    return params.get("sessionId") || "";
+    const t = params.get("tab");
+    return {
+      sessionId: params.get("sessionId") || "",
+      initialTab: t === "matches" || t === "sideBySide" ? t : "summary"
+    };
   }, [location.search]);
 
   const [session, setSession] = React.useState(null);
   const [loading, setLoading] = React.useState(true);
-  const [activeTab, setActiveTab] = React.useState("summary");
+  const [activeTab, setActiveTab] = React.useState(initialTab);
   const [isRenaming, setIsRenaming] = React.useState(false);
   const [renameText, setRenameText] = React.useState("");
   const [highlightedMatchId, setHighlightedMatchId] = React.useState(null);
+  const [editingMatchId, setEditingMatchId] = React.useState(null);
+  const [editForm, setEditForm] = React.useState(null);
+
+  React.useEffect(() => {
+    setActiveTab(initialTab);
+  }, [initialTab]);
 
   React.useEffect(() => {
     let cancelled = false;
     const load = async () => {
       setLoading(true);
       try {
-        const localSessions = getGuestSessions() || [];
+        const localSessions = readLocalSavedSessions();
         let found = sessionId
           ? localSessions.find((s) => s.id === sessionId)
           : localSessions[0] || null;
 
         if (!found && sessionId && !sessionId.startsWith("guest_")) {
-          found = await firebaseService.getSession(sessionId);
+          const timeoutPromise = new Promise((r) => setTimeout(() => r(null), 2500));
+          found = await Promise.race([firebaseService.getSession(sessionId), timeoutPromise]);
         }
         if (!found && !sessionId && user?.uid) {
-          const userSessions = await firebaseService.getUserSessions(user.uid);
+          const timeoutPromise = new Promise((r) => setTimeout(() => r(null), 2500));
+          const userSessions = await Promise.race([
+            firebaseService.getUserSessions(user.uid),
+            timeoutPromise
+          ]);
           if (userSessions && userSessions.length > 0) {
             found = userSessions[0];
           }
@@ -482,6 +530,149 @@ const Analysis = () => {
       cancelled = true;
     };
   }, [sessionId, user?.uid]);
+
+  const persistSessionUpdate = (updatedSession) => {
+    setSession(updatedSession);
+    try {
+      const localList = readLocalSavedSessions();
+      const exists = localList.some((s) => s.id === updatedSession.id);
+      const nextList = exists
+        ? localList.map((s) => (s.id === updatedSession.id ? updatedSession : s))
+        : [updatedSession, ...localList];
+      writeLocalSavedSessions(nextList);
+    } catch {}
+    if (user?.uid && !String(updatedSession.id).startsWith("guest_")) {
+      firebaseService
+        .updateSession(updatedSession.id, {
+          sessionName: updatedSession.sessionName,
+          notes: updatedSession.notes,
+          matches: updatedSession.matches
+        })
+        .catch(() => {});
+    }
+  };
+
+  const handleOpenInTracker = () => {
+    if (!session) return;
+    if (typeof replaceSessionData === "function") {
+      replaceSessionData({
+        sessionName: session.sessionName || "Practice 1",
+        sessionType: session.sessionType || "Practice",
+        matchType: session.matchType || "Full Game",
+        selectedFeature: session.selectedFeature || "",
+        notes: session.notes || "",
+        matches: Array.isArray(session.matches) ? session.matches : [],
+        isSessionCompleted: false,
+        robot1Leave: false,
+        robot2Leave: false,
+        robot1ParkAuto: false,
+        robot2ParkAuto: false,
+        robot1ParkTeleop: false,
+        robot2ParkTeleop: false,
+        tipping: 0,
+        ballsInHive: 0,
+        garden: 0,
+        flower: 0,
+        flowerBonus: 0,
+        minorPenalties: 0,
+        majorPenalties: 0,
+        phaseLog: []
+      });
+      if (typeof setHasStarted === "function") setHasStarted(true);
+    }
+    navigate(ROUTES.ACTIVE);
+  };
+
+  const handleStartEditMatch = (m) => {
+    setEditingMatchId(m.id);
+    setEditForm({
+      tipping: Number(m.tipping) || 0,
+      flower: Number(m.flower) || 0,
+      flowerBonus: Number(m.flowerBonus) || 0,
+      ballsInHive: Number(m.ballsInHive) || 0,
+      garden: Number(m.garden) || 0,
+      minorPenalties: Number(m.minorPenalties) || 0,
+      majorPenalties: Number(m.majorPenalties) || 0,
+      robot1Leave: !!m.robot1Leave,
+      robot2Leave: !!m.robot2Leave,
+      robot1ParkAuto: !!m.robot1ParkAuto,
+      robot2ParkAuto: !!m.robot2ParkAuto,
+      robot1ParkTeleop: !!m.robot1ParkTeleop,
+      robot2ParkTeleop: !!m.robot2ParkTeleop
+    });
+  };
+
+  const handleSaveEditMatch = (matchId) => {
+    if (!session || !editForm) return;
+    const fbType = session.matchType || "Full Game";
+    const nextMatches = (session.matches || []).map((m, idx) => {
+      if (m.id !== matchId) return m;
+      const merged = {
+        ...m,
+        ...editForm,
+        matchType: m.matchType || fbType,
+        matchNumber: m.matchNumber ?? idx + 1
+      };
+      const bd = getBreakdown(merged);
+      return {
+        ...merged,
+        finalScore: bd.total
+      };
+    });
+    const updatedSession = { ...session, matches: nextMatches };
+    persistSessionUpdate(updatedSession);
+    setEditingMatchId(null);
+    setEditForm(null);
+    toast.success("Match updated");
+  };
+
+  const handleDeleteMatch = (matchId, matchNum) => {
+    if (!session) return;
+    const currentMatches = session.matches || [];
+    if (currentMatches.length <= 1) {
+      toast.error("A session must have at least 1 match");
+      return;
+    }
+    const nextMatches = currentMatches
+      .filter((m) => m.id !== matchId)
+      .map((m, idx) => ({ ...m, matchNumber: idx + 1 }));
+    persistSessionUpdate({ ...session, matches: nextMatches });
+    toast.success(`Match ${matchNum} deleted`);
+  };
+
+  const handleAddBlankMatch = () => {
+    if (!session) return;
+    const fbType = session.matchType || "Full Game";
+    const currentMatches = session.matches || [];
+    const newId = `match_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
+    const newMatch = {
+      id: newId,
+      matchNumber: currentMatches.length + 1,
+      matchType: fbType,
+      robotCount: 2,
+      tipping: 0,
+      flower: 0,
+      flowerBonus: 0,
+      ballsInHive: 0,
+      garden: 0,
+      minorPenalties: 0,
+      majorPenalties: 0,
+      robot1Leave: false,
+      robot2Leave: false,
+      robot1ParkAuto: false,
+      robot2ParkAuto: false,
+      robot1ParkTeleop: false,
+      robot2ParkTeleop: false,
+      phaseLog: [],
+      finalScore: 0,
+      createdAt: new Date().toISOString()
+    };
+    const nextMatches = [...currentMatches, newMatch];
+    persistSessionUpdate({ ...session, matches: nextMatches });
+    setActiveTab("matches");
+    handleStartEditMatch(newMatch);
+    toast.success(`Match ${newMatch.matchNumber} added — edit scores below`);
+  };
 
   if (loading) {
     return u.jsx("div", {
@@ -581,23 +772,10 @@ const Analysis = () => {
   const handleRenameSave = async (e) => {
     e.preventDefault();
     const trimmed = renameText.trim();
-    if (!trimmed) return;
+    if (!trimmed || !session) return;
     setIsRenaming(false);
-    setSession((prev) => (prev ? { ...prev, sessionName: trimmed } : prev));
-    try {
-      const localList = getGuestSessions() || [];
-      if (localList.some((s) => s.id === session.id)) {
-        setGuestSessions(
-          localList.map((s) => (s.id === session.id ? { ...s, sessionName: trimmed } : s))
-        );
-      }
-      if (user?.uid && !String(session.id).startsWith("guest_")) {
-        await firebaseService.updateSession(session.id, { sessionName: trimmed });
-      }
-      toast.success("Session renamed");
-    } catch (err) {
-      console.error(err);
-    }
+    persistSessionUpdate({ ...session, sessionName: trimmed });
+    toast.success("Session renamed");
   };
 
   const handleExportCSV = () => {
@@ -1120,120 +1298,309 @@ const Analysis = () => {
 
         /* TAB 2: MATCHES */
         activeTab === "matches" &&
-          u.jsx("div", {
+          u.jsxs("div", {
             className: "space-y-4",
-            children: scoredMatches.map(({ match: m, matchNumber, score }) => {
-              const rows = getMatchRows({ ...m, matchType: m.matchType || fallbackType });
-              const matchRp = getMatchRP({ ...m, matchType: m.matchType || fallbackType });
-              const badges = getMatchRPBadges(matchRp);
-              const cycles = getMatchCycleTimes(m);
-              const isHighlighted = highlightedMatchId === m.id;
+            children: [
+              /* Action bar for Matches Tab: Add Match & Open in Tracker */
+              u.jsxs("div", {
+                className: "flex flex-wrap items-center justify-between gap-3 p-4 rounded-2xl border-2",
+                style: statCardStyle,
+                children: [
+                  u.jsx("div", {
+                    className: "text-xs sm:text-sm text-gray-300",
+                    children: "Click ✏️ Edit on any match below to adjust scores, add a new match, or continue tracking live."
+                  }),
+                  u.jsxs("div", {
+                    className: "flex flex-wrap items-center gap-2",
+                    children: [
+                      u.jsx("button", {
+                        type: "button",
+                        onClick: handleAddBlankMatch,
+                        className: "px-3.5 py-2 rounded-xl text-xs font-bold border border-[#DAA520] text-[#FFD700] hover:bg-white/10 transition-colors",
+                        style: { backgroundColor: "#141414" },
+                        children: "➕ Add Match"
+                      }),
+                      u.jsx("button", {
+                        type: "button",
+                        onClick: handleOpenInTracker,
+                        className: "px-3.5 py-2 rounded-xl text-xs font-bold transition-transform hover:scale-105",
+                        style: { backgroundColor: "#DAA520", color: "#0a0a0a" },
+                        children: "▶ Continue in Match Tracker"
+                      })
+                    ]
+                  })
+                ]
+              }),
 
-              return u.jsxs(
-                "div",
-                {
-                  id: `analysis-match-${m.id}`,
-                  className: "p-5 rounded-2xl border-2 space-y-4 transition-all",
-                  style: {
-                    backgroundColor: "#0c0c0c",
-                    borderColor: isHighlighted ? "#22c55e" : "#DAA520",
-                    color: "#ffffff",
-                    boxShadow: "0 8px 24px rgba(0, 0, 0, 0.85)"
-                  },
-                  children: [
-                    u.jsxs("div", {
-                      className: "flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-white/10",
-                      children: [
-                        u.jsxs("div", {
-                          className: "flex items-center gap-3",
-                          children: [
-                            u.jsxs("h3", {
-                              className: "text-lg font-bold text-white",
-                              children: ["Match ", matchNumber]
-                            }),
-                            badges.map((b) =>
-                              u.jsx(
-                                "span",
-                                {
-                                  className:
-                                    "px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-[#26200d] text-[#FFD700] border border-[#DAA520]",
-                                  children: b
-                                },
-                                b
-                              )
-                            )
-                          ]
-                        }),
-                        u.jsxs("div", {
-                          className: "text-2xl font-bold text-[#FFD700] tabular-nums",
-                          children: [score, " pts"]
-                        })
-                      ]
-                    }),
+              scoredMatches.map(({ match: m, matchNumber, score }) => {
+                const rows = getMatchRows({ ...m, matchType: m.matchType || fallbackType });
+                const matchRp = getMatchRP({ ...m, matchType: m.matchType || fallbackType });
+                const badges = getMatchRPBadges(matchRp);
+                const cycles = getMatchCycleTimes(m);
+                const isHighlighted = highlightedMatchId === m.id;
+                const isEditing = editingMatchId === m.id && editForm !== null;
 
-                    u.jsx("div", {
-                      className: "grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs",
-                      children: rows.map((r) =>
-                        u.jsxs(
-                          "div",
-                          {
-                            className: "p-3 rounded-xl bg-white/[0.04] border border-white/10 space-y-1",
+                return u.jsxs(
+                  "div",
+                  {
+                    id: `analysis-match-${m.id}`,
+                    className: "p-5 rounded-2xl border-2 space-y-4 transition-all",
+                    style: {
+                      backgroundColor: "#0c0c0c",
+                      borderColor: isEditing || isHighlighted ? "#22c55e" : "#DAA520",
+                      color: "#ffffff",
+                      boxShadow: "0 8px 24px rgba(0, 0, 0, 0.85)"
+                    },
+                    children: [
+                      u.jsxs("div", {
+                        className: "flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-white/10",
+                        children: [
+                          u.jsxs("div", {
+                            className: "flex items-center gap-3",
                             children: [
-                              u.jsx("div", {
-                                className: "text-gray-400 font-medium truncate",
-                                children: r.label
+                              u.jsxs("h3", {
+                                className: "text-lg font-bold text-white",
+                                children: ["Match ", matchNumber]
                               }),
+                              badges.map((b) =>
+                                u.jsx(
+                                  "span",
+                                  {
+                                    className:
+                                      "px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-[#26200d] text-[#FFD700] border border-[#DAA520]",
+                                    children: b
+                                  },
+                                  b
+                                )
+                              )
+                            ]
+                          }),
+                          u.jsxs("div", {
+                            className: "flex items-center gap-3",
+                            children: [
                               u.jsxs("div", {
-                                className: "flex items-baseline justify-between gap-2",
+                                className: "text-2xl font-bold text-[#FFD700] tabular-nums",
+                                children: [score, " pts"]
+                              }),
+                              !isEditing &&
+                                u.jsx("button", {
+                                  type: "button",
+                                  onClick: () => handleStartEditMatch(m),
+                                  className:
+                                    "px-3 py-1.5 rounded-lg border border-[#DAA520] text-xs font-bold text-[#FFD700] hover:bg-white/10 transition-colors",
+                                  children: "✏️ Edit"
+                                }),
+                              !isEditing &&
+                                matches.length > 1 &&
+                                u.jsx("button", {
+                                  type: "button",
+                                  onClick: () => handleDeleteMatch(m.id, matchNumber),
+                                  className:
+                                    "px-2.5 py-1.5 rounded-lg border border-red-500/40 text-xs font-bold text-red-400 hover:bg-red-500/15 transition-colors",
+                                  children: "🗑️"
+                                })
+                            ]
+                          })
+                        ]
+                      }),
+
+                      isEditing
+                        ? u.jsxs("div", {
+                            className: "space-y-4 pt-2",
+                            children: [
+                              /* Numeric fields grid */
+                              u.jsx("div", {
+                                className: "grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs",
                                 children: [
-                                  u.jsxs("span", {
-                                    className: "text-base font-bold text-white tabular-nums",
-                                    children: ["×", r.count]
+                                  { key: "tipping", label: "Hive Tips (pts)" },
+                                  { key: "flower", label: "Owned flower pieces" },
+                                  { key: "flowerBonus", label: "Flower nectar bottom" },
+                                  { key: "ballsInHive", label: "Left in Hive" },
+                                  { key: "garden", label: "Garden" },
+                                  { key: "minorPenalties", label: "Minor Fouls" },
+                                  { key: "majorPenalties", label: "Major Fouls" }
+                                ].map((field) =>
+                                  u.jsxs(
+                                    "label",
+                                    {
+                                      className: "p-3 rounded-xl bg-white/[0.04] border border-[#DAA520]/60 flex flex-col gap-1.5",
+                                      children: [
+                                        u.jsx("span", {
+                                          className: "text-gray-300 font-semibold",
+                                          children: field.label
+                                        }),
+                                        u.jsxs("div", {
+                                          className: "flex items-center gap-2",
+                                          children: [
+                                            u.jsx("button", {
+                                              type: "button",
+                                              onClick: () =>
+                                                setEditForm((prev) => ({
+                                                  ...prev,
+                                                  [field.key]: Math.max(0, (Number(prev[field.key]) || 0) - 1)
+                                                })),
+                                              className: "w-8 h-8 rounded-lg border border-[#DAA520] font-bold text-white hover:bg-white/10",
+                                              children: "−"
+                                            }),
+                                            u.jsx("input", {
+                                              type: "number",
+                                              min: 0,
+                                              max: 999,
+                                              value: editForm[field.key] ?? 0,
+                                              onChange: (e) =>
+                                                setEditForm((prev) => ({
+                                                  ...prev,
+                                                  [field.key]: Math.max(0, parseInt(e.target.value, 10) || 0)
+                                                })),
+                                              className:
+                                                "w-full h-8 text-center rounded-lg bg-[#141414] border border-white/20 text-white font-bold tabular-nums"
+                                            }),
+                                            u.jsx("button", {
+                                              type: "button",
+                                              onClick: () =>
+                                                setEditForm((prev) => ({
+                                                  ...prev,
+                                                  [field.key]: (Number(prev[field.key]) || 0) + 1
+                                                })),
+                                              className: "w-8 h-8 rounded-lg border border-[#DAA520] font-bold text-white hover:bg-white/10",
+                                              children: "+"
+                                            })
+                                          ]
+                                        })
+                                      ]
+                                    },
+                                    field.key
+                                  )
+                                )
+                              }),
+
+                              /* Boolean checkboxes for Robot Leave & Park */
+                              u.jsx("div", {
+                                className: "grid grid-cols-2 sm:grid-cols-3 gap-2.5 text-xs",
+                                children: [
+                                  { key: "robot1Leave", label: "Robot 1 Leave (Auto)" },
+                                  { key: "robot2Leave", label: "Robot 2 Leave (Auto)" },
+                                  { key: "robot1ParkAuto", label: "Robot 1 Auto Park" },
+                                  { key: "robot2ParkAuto", label: "Robot 2 Auto Park" },
+                                  { key: "robot1ParkTeleop", label: "Robot 1 End Park" },
+                                  { key: "robot2ParkTeleop", label: "Robot 2 End Park" }
+                                ].map((chk) =>
+                                  u.jsxs(
+                                    "label",
+                                    {
+                                      className:
+                                        "flex items-center gap-2.5 p-2.5 rounded-xl bg-white/[0.04] border border-white/15 cursor-pointer hover:border-[#DAA520]",
+                                      children: [
+                                        u.jsx("input", {
+                                          type: "checkbox",
+                                          checked: !!editForm[chk.key],
+                                          onChange: (e) =>
+                                            setEditForm((prev) => ({
+                                              ...prev,
+                                              [chk.key]: e.target.checked
+                                            })),
+                                          className: "w-4 h-4 accent-[#DAA520]"
+                                        }),
+                                        u.jsx("span", {
+                                          className: "text-white font-medium",
+                                          children: chk.label
+                                        })
+                                      ]
+                                    },
+                                    chk.key
+                                  )
+                                )
+                              }),
+
+                              /* Save / Cancel Edit buttons */
+                              u.jsxs("div", {
+                                className: "flex justify-end gap-2 pt-2",
+                                children: [
+                                  u.jsx("button", {
+                                    type: "button",
+                                    onClick: () => {
+                                      setEditingMatchId(null);
+                                      setEditForm(null);
+                                    },
+                                    className:
+                                      "px-4 py-2 rounded-xl border border-gray-600 text-xs font-bold text-gray-200 hover:bg-white/10",
+                                    children: "Cancel"
                                   }),
-                                  u.jsxs("span", {
-                                    className: `font-semibold tabular-nums ${
-                                      r.informational ? "text-red-400" : "text-[#DAA520]"
-                                    }`,
-                                    children: [
-                                      r.informational && r.points > 0 ? "+" : "",
-                                      r.points,
-                                      " pts"
-                                    ]
+                                  u.jsx("button", {
+                                    type: "button",
+                                    onClick: () => handleSaveEditMatch(m.id),
+                                    className: "px-5 py-2 rounded-xl text-xs font-bold",
+                                    style: { backgroundColor: "#22c55e", color: "#0a0a0a" },
+                                    children: "💾 Save Match"
                                   })
                                 ]
                               })
                             ]
-                          },
-                          r.key
-                        )
-                      )
-                    }),
-
-                    cycles.length > 0 &&
-                      u.jsxs("div", {
-                        className: "pt-2 text-xs text-gray-300 flex flex-wrap items-center gap-2",
-                        children: [
-                          u.jsx("span", {
-                            className: "font-semibold text-gray-400",
-                            children: "Time between tips:"
-                          }),
-                          cycles.map((c, idx) =>
-                            u.jsxs(
-                              "span",
-                              {
-                                className: "px-2 py-0.5 rounded bg-white/10 text-white tabular-nums",
-                                children: [c, "s"]
-                              },
-                              idx
+                          })
+                        : u.jsx("div", {
+                            className: "grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs",
+                            children: rows.map((r) =>
+                              u.jsxs(
+                                "div",
+                                {
+                                  className: "p-3 rounded-xl bg-white/[0.04] border border-white/10 space-y-1",
+                                  children: [
+                                    u.jsx("div", {
+                                      className: "text-gray-400 font-medium truncate",
+                                      children: r.label
+                                    }),
+                                    u.jsxs("div", {
+                                      className: "flex items-baseline justify-between gap-2",
+                                      children: [
+                                        u.jsxs("span", {
+                                          className: "text-base font-bold text-white tabular-nums",
+                                          children: ["×", r.count]
+                                        }),
+                                        u.jsxs("span", {
+                                          className: `font-semibold tabular-nums ${
+                                            r.informational ? "text-red-400" : "text-[#DAA520]"
+                                          }`,
+                                          children: [
+                                            r.informational && r.points > 0 ? "+" : "",
+                                            r.points,
+                                            " pts"
+                                          ]
+                                        })
+                                      ]
+                                    })
+                                  ]
+                                },
+                                r.key
+                              )
                             )
-                          )
-                        ]
-                      })
-                  ]
-                },
-                m.id || matchNumber
-              );
-            })
+                          }),
+
+                      cycles.length > 0 &&
+                        u.jsxs("div", {
+                          className: "pt-2 text-xs text-gray-300 flex flex-wrap items-center gap-2",
+                          children: [
+                            u.jsx("span", {
+                              className: "font-semibold text-gray-400",
+                              children: "Time between tips:"
+                            }),
+                            cycles.map((c, idx) =>
+                              u.jsxs(
+                                "span",
+                                {
+                                  className: "px-2 py-0.5 rounded bg-white/10 text-white tabular-nums",
+                                  children: [c, "s"]
+                                },
+                                idx
+                              )
+                            )
+                          ]
+                        })
+                    ]
+                  },
+                  m.id || matchNumber
+                );
+              })
+            ]
           }),
 
         /* TAB 3: SIDE BY SIDE */

@@ -56,18 +56,43 @@ function computeSessionStats(session) {
   return { matchCount, best, avg, rp, duration };
 }
 
+function readLocalSavedSessions() {
+  const map = new Map();
+  try {
+    const v2Raw = localStorage.getItem("src28785-saved-sessions-v2");
+    const v2List = v2Raw ? JSON.parse(v2Raw) : [];
+    if (Array.isArray(v2List)) {
+      for (const s of v2List) {
+        if (s && s.id) map.set(s.id, s);
+      }
+    }
+  } catch {}
+  try {
+    const guestList = getGuestSessions() || [];
+    if (Array.isArray(guestList)) {
+      for (const s of guestList) {
+        if (s && s.id && !map.has(s.id)) map.set(s.id, s);
+      }
+    }
+  } catch {}
+  return [...map.values()].sort((a, b) => parseDateMs(b) - parseDateMs(a));
+}
+
+function writeLocalSavedSessions(list) {
+  try {
+    localStorage.setItem("src28785-saved-sessions-v2", JSON.stringify(list));
+  } catch {}
+  try {
+    setGuestSessions(list);
+  } catch {}
+}
+
 const Sessions = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { sessionData, hasStarted } = useSession();
+  const { sessionData, hasStarted, replaceSessionData, setHasStarted } = useSession();
 
-  const [sessions, setSessions] = React.useState(() => {
-    try {
-      return getGuestSessions() || [];
-    } catch {
-      return [];
-    }
-  });
+  const [sessions, setSessions] = React.useState(() => readLocalSavedSessions());
   const [loadingCloud, setLoadingCloud] = React.useState(false);
   const [search, setSearch] = React.useState("");
   const [matchTypeFilter, setMatchTypeFilter] = React.useState("ALL");
@@ -82,32 +107,31 @@ const Sessions = () => {
   }, []);
 
   const loadAllSessions = React.useCallback(async () => {
-    let localList = [];
-    try {
-      localList = getGuestSessions() || [];
-    } catch {
-      localList = [];
-    }
+    const localList = readLocalSavedSessions();
+    setSessions(localList);
 
     if (!user?.uid) {
-      setSessions(localList);
       return;
     }
 
     setLoadingCloud(true);
     try {
-      const cloudList = await firebaseService.getUserSessions(user.uid);
-      const map = new Map();
-      for (const s of [...(cloudList || []), ...localList]) {
-        if (s && s.id && !map.has(s.id)) {
-          map.set(s.id, s);
+      const cloudPromise = firebaseService.getUserSessions(user.uid);
+      const timeoutPromise = new Promise((resolve) => setTimeout(() => resolve(null), 2500));
+      const cloudList = await Promise.race([cloudPromise, timeoutPromise]);
+      if (Array.isArray(cloudList)) {
+        const map = new Map();
+        for (const s of [...localList, ...cloudList]) {
+          if (s && s.id && !map.has(s.id)) {
+            map.set(s.id, s);
+          }
         }
+        const merged = [...map.values()].sort((a, b) => parseDateMs(b) - parseDateMs(a));
+        setSessions(merged);
+        writeLocalSavedSessions(merged);
       }
-      const merged = [...map.values()].sort((a, b) => parseDateMs(b) - parseDateMs(a));
-      setSessions(merged);
     } catch (e) {
       console.warn("Could not load cloud sessions, showing local sessions:", e);
-      setSessions(localList);
     } finally {
       setLoadingCloud(false);
     }
@@ -128,6 +152,38 @@ const Sessions = () => {
     !sessionData.isSessionCompleted &&
     (hasStarted || (sessionData.matches && sessionData.matches.length > 0));
 
+  const handleOpenInTracker = (session, e) => {
+    if (e) e.stopPropagation();
+    setOpenMenuId(null);
+    if (typeof replaceSessionData === "function") {
+      replaceSessionData({
+        sessionName: session.sessionName || "Practice 1",
+        sessionType: session.sessionType || "Practice",
+        matchType: session.matchType || "Full Game",
+        selectedFeature: session.selectedFeature || "",
+        notes: session.notes || "",
+        matches: Array.isArray(session.matches) ? session.matches : [],
+        isSessionCompleted: false,
+        robot1Leave: false,
+        robot2Leave: false,
+        robot1ParkAuto: false,
+        robot2ParkAuto: false,
+        robot1ParkTeleop: false,
+        robot2ParkTeleop: false,
+        tipping: 0,
+        ballsInHive: 0,
+        garden: 0,
+        flower: 0,
+        flowerBonus: 0,
+        minorPenalties: 0,
+        majorPenalties: 0,
+        phaseLog: []
+      });
+      if (typeof setHasStarted === "function") setHasStarted(true);
+    }
+    navigate(ROUTES.ACTIVE);
+  };
+
   const handleDelete = async (session, e) => {
     if (e) e.stopPropagation();
     setOpenMenuId(null);
@@ -136,10 +192,10 @@ const Sessions = () => {
     const next = sessions.filter((s) => s.id !== id);
     setSessions(next);
     try {
-      const localNext = (getGuestSessions() || []).filter((s) => s.id !== id);
-      setGuestSessions(localNext);
+      const localNext = readLocalSavedSessions().filter((s) => s.id !== id);
+      writeLocalSavedSessions(localNext);
       if (user?.uid && !String(id).startsWith("guest_")) {
-        await firebaseService.deleteSession(id);
+        firebaseService.deleteSession(id).catch(() => {});
       }
       toast.success(`Deleted "${session.sessionName || "Session"}"`);
     } catch (err) {
@@ -158,14 +214,12 @@ const Sessions = () => {
     );
     setSessions(updated);
     try {
-      const localList = getGuestSessions() || [];
-      if (localList.some((s) => s.id === session.id)) {
-        setGuestSessions(
-          localList.map((s) => (s.id === session.id ? { ...s, archived: nextArchived } : s))
-        );
-      }
+      const localList = readLocalSavedSessions();
+      writeLocalSavedSessions(
+        localList.map((s) => (s.id === session.id ? { ...s, archived: nextArchived } : s))
+      );
       if (user?.uid && !String(session.id).startsWith("guest_")) {
-        await firebaseService.updateSession(session.id, { archived: nextArchived });
+        firebaseService.updateSession(session.id, { archived: nextArchived }).catch(() => {});
       }
       toast.success(nextArchived ? "Session archived" : "Session unarchived");
     } catch (err) {
@@ -183,14 +237,12 @@ const Sessions = () => {
       prev.map((s) => (s.id === targetId ? { ...s, sessionName: newName } : s))
     );
     try {
-      const localList = getGuestSessions() || [];
-      if (localList.some((s) => s.id === targetId)) {
-        setGuestSessions(
-          localList.map((s) => (s.id === targetId ? { ...s, sessionName: newName } : s))
-        );
-      }
+      const localList = readLocalSavedSessions();
+      writeLocalSavedSessions(
+        localList.map((s) => (s.id === targetId ? { ...s, sessionName: newName } : s))
+      );
       if (user?.uid && !String(targetId).startsWith("guest_")) {
-        await firebaseService.updateSession(targetId, { sessionName: newName });
+        firebaseService.updateSession(targetId, { sessionName: newName }).catch(() => {});
       }
       toast.success("Session renamed");
     } catch (err) {
@@ -464,7 +516,7 @@ const Sessions = () => {
                                 u.jsxs("div", {
                                   onClick: (e) => e.stopPropagation(),
                                   className:
-                                    "absolute right-0 mt-1 w-44 rounded-xl border p-1.5 shadow-2xl z-30 space-y-1",
+                                    "absolute right-0 mt-1 w-52 rounded-xl border p-1.5 shadow-2xl z-30 space-y-1",
                                   style: {
                                     backgroundColor: "#141414",
                                     borderColor: "#DAA520"
@@ -478,7 +530,24 @@ const Sessions = () => {
                                         ),
                                       className:
                                         "w-full text-left px-3 py-2 rounded-lg text-xs font-semibold text-white hover:bg-white/10",
-                                      children: "📊 View Charts & Analysis"
+                                      children: "📊 View Charts & Stats"
+                                    }),
+                                    u.jsx("button", {
+                                      type: "button",
+                                      onClick: () =>
+                                        navigate(
+                                          `${ROUTES.ANALYSIS}?sessionId=${encodeURIComponent(s.id)}&tab=matches`
+                                        ),
+                                      className:
+                                        "w-full text-left px-3 py-2 rounded-lg text-xs font-semibold text-white hover:bg-white/10",
+                                      children: "✏️ Edit Matches & Scores"
+                                    }),
+                                    u.jsx("button", {
+                                      type: "button",
+                                      onClick: (e) => handleOpenInTracker(s, e),
+                                      className:
+                                        "w-full text-left px-3 py-2 rounded-lg text-xs font-semibold text-white hover:bg-white/10",
+                                      children: "➕ Continue in Tracker"
                                     }),
                                     u.jsx("button", {
                                       type: "button",
@@ -490,7 +559,7 @@ const Sessions = () => {
                                       },
                                       className:
                                         "w-full text-left px-3 py-2 rounded-lg text-xs font-semibold text-white hover:bg-white/10",
-                                      children: "✏️ Rename"
+                                      children: "🏷️ Rename Session"
                                     }),
                                     u.jsx("button", {
                                       type: "button",

@@ -1,5 +1,5 @@
 import { j as e, u as useAuth, c as useNavigate, R as ROUTES, a as useTheme } from "./index-CrUxzRby.js";
-import { r as React } from "./vendor-react-BgpSLK3q.js";
+import { r as React } from "./vendor-react-BrRUuK2M.js";
 
 function ProfilePage() {
   const { user, signOut, updateUserDisplayName, openAuthModal } = useAuth();
