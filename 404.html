@@ -1,0 +1,670 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=5.0, user-scalable=yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Scienceroboticsclub 28785" />
+    <meta name="theme-color" content="#537788" />
+    <link rel="icon" type="image/png" href="./assets/favicon.png" />
+    <title>Scienceroboticsclub 28785</title>
+    <!--
+      Apply the saved theme before the first paint so a dark theme never
+      flashes white. Same parsing as ThemeContext.tsx (which stays the source
+      of truth once React mounts): default dark, legacy boolean values.
+    -->
+    <script>
+      (function () {
+        // Force honeycomb theme
+        var mode = 'honeycomb';
+        var classes = document.documentElement.classList;
+        classes.add('dark');
+        classes.add('honeycomb');
+        localStorage.setItem('Scienceroboticsclub 28785-theme', JSON.stringify('honeycomb'));
+      })();
+    </script>
+    <style>
+      /* Force honeycomb background everywhere */
+      body {
+        background-color: #0a0a0a !important;
+      }
+
+      .honeycomb #root:before {
+        background-color: #0a0a0a !important;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='49' viewBox='0 0 28 49'%3E%3Cg fill-rule='evenodd'%3E%3Cg fill='%23daa520' fill-opacity='0.26'%3E%3Cpath d='M13.99 9.25l13 7.5v15l-13 7.5L1 31.75v-15l12.99-7.5zM3 17.9v12.7l10.99 6.34 11-6.35V17.9l-11-6.34L3 17.9zM0 15l12.98-7.5V0h-2v6.35L0 12.69v2.3zm0 18.5L12.98 41v8h-2v-6.85L0 35.81v-2.3zM15 0v7.5L27.99 15H28v-2.31h-.01L17 6.35V0h-2zm0 49v-8l12.99-7.5H28v2.31h-.01L17 42.15V49h-2z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E") !important;
+        background-size: 60px 105px !important;
+      }
+
+      /* Let yellow honeycomb pattern show through all page-level wrappers (including /sessions, /active, /login, /signup) */
+      .honeycomb #root > div,
+      .honeycomb main,
+      .honeycomb main > div,
+      .honeycomb main .bg-background,
+      .honeycomb #root > div > .bg-background,
+      .honeycomb main .min-h-\[100dvh\].bg-team-dark {
+        background-color: transparent !important;
+      }
+
+      /* Solid black cards with white text for Error / Empty / Sessions cards inside .bg-background */
+      .honeycomb .bg-background > .max-w-md {
+        background-color: #0c0c0c !important;
+        border: 2px solid #daa520 !important;
+        border-radius: 1rem !important;
+        padding: 2rem !important;
+        box-shadow: 0 12px 32px rgba(0, 0, 0, 0.9) !important;
+        color: #ffffff !important;
+      }
+      .honeycomb .bg-background > .max-w-md p {
+        color: #e5e7eb !important;
+      }
+      .honeycomb .bg-background > .max-w-md button {
+        background-color: #141414 !important;
+        color: #ffffff !important;
+        border: 1.5px solid #daa520 !important;
+      }
+      .honeycomb .bg-background > .max-w-md button.bg-team-blue {
+        background-color: #daa520 !important;
+        color: #000000 !important;
+        font-weight: 700 !important;
+      }
+
+      /* Sign in / Sign up / Reset Password form cards & inputs */
+      .bg-\[\#1f1f1f\] {
+        background-color: #0c0c0c !important;
+        border: 2px solid #daa520 !important;
+        box-shadow: 0 12px 36px rgba(0, 0, 0, 0.92) !important;
+        color: #ffffff !important;
+      }
+      .max-w-\[400px\] {
+        max-width: 420px !important;
+      }
+      .border-\[\#DAA520\] {
+        border-color: #daa520 !important;
+      }
+      .bg-\[\#DAA520\] {
+        background-color: #daa520 !important;
+        color: #000000 !important;
+      }
+      .bg-\[\#DAA520\]:hover,
+      .hover\:bg-\[\#B8860B\]:hover {
+        background-color: #e5b228 !important;
+      }
+      .bg-black {
+        background-color: #161616 !important;
+        color: #ffffff !important;
+      }
+      .bg-\[\#1f1f1f\] input {
+        background-color: #161616 !important;
+        border: 1.5px solid #daa520 !important;
+        color: #ffffff !important;
+      }
+      .bg-\[\#1f1f1f\] input::placeholder {
+        color: #9ca3af !important;
+      }
+      .bg-\[\#1f1f1f\] button.border-\[\#DAA520\] {
+        background-color: #161616 !important;
+        border: 1.5px solid #daa520 !important;
+        color: #ffffff !important;
+      }
+      .bg-\[\#1f1f1f\] button.border-\[\#DAA520\]:hover {
+        background-color: #26200d !important;
+      }
+
+      /* Header Sign in / Sign up buttons: solid black with white text & gold border */
+      header a[href="/login"],
+      header a[href="/signup"] {
+        background-color: #111111 !important;
+        border: 1.5px solid #daa520 !important;
+        color: #ffffff !important;
+        font-weight: 600 !important;
+      }
+      header a[href="/login"]:hover,
+      header a[href="/signup"]:hover {
+        background-color: #daa520 !important;
+        color: #000000 !important;
+      }
+
+      /* Social media buttons next to Scienceroboticsclub 28785 */
+      .social-links-bar {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        margin-left: 6px;
+      }
+      .social-header-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        background-color: #111111 !important;
+        border: 1.5px solid #daa520 !important;
+        color: #daa520 !important;
+        transition: all 0.2s ease;
+        flex-shrink: 0;
+      }
+      .social-header-btn svg {
+        width: 17px !important;
+        height: 17px !important;
+        pointer-events: none;
+      }
+      .social-header-btn:hover {
+        transform: translateY(-2px) scale(1.06);
+        box-shadow: 0 0 12px rgba(218, 165, 32, 0.55);
+      }
+      .social-header-btn.social-ig:hover {
+        background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%) !important;
+        border-color: #ff7b89 !important;
+        color: #ffffff !important;
+      }
+      .social-header-btn.social-fb:hover {
+        background-color: #1877f2 !important;
+        border-color: #4599ff !important;
+        color: #ffffff !important;
+      }
+      .social-header-btn.social-tt:hover {
+        background-color: #000000 !important;
+        border-color: #00f2fe !important;
+        color: #ff0050 !important;
+        box-shadow: -2px 0 8px rgba(0, 242, 254, 0.6), 2px 0 8px rgba(255, 0, 80, 0.6);
+      }
+
+      /* Total & Ranking Points breakdown cards: solid black background, white text, gold border */
+      [data-tutorial="breakdown"],
+      [data-breakdown-card] {
+        background-color: #0c0c0c !important;
+        border: 2px solid #daa520 !important;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.85) !important;
+        color: #ffffff !important;
+      }
+      [data-tutorial="breakdown"] h2,
+      [data-tutorial="breakdown"] h3,
+      [data-tutorial="breakdown"] span,
+      [data-tutorial="breakdown"] p,
+      [data-breakdown-card] h2,
+      [data-breakdown-card] span,
+      [data-breakdown-card] p {
+        color: #ffffff !important;
+      }
+      [data-tutorial="breakdown"] [role="progressbar"] > div,
+      [data-breakdown-card] [role="progressbar"] > div {
+        background-color: #262626 !important;
+        border: 1px solid rgba(218, 165, 32, 0.35) !important;
+      }
+
+      /* Hive Tips -1 button & disabled controls: solid black with white text & gold border */
+      button[aria-label="−1 Tip"],
+      .honeycomb .dark\:bg-white\/\[0\.05\]:is(.dark *) {
+        background-color: #0c0c0c !important;
+        border: 2px solid #daa520 !important;
+        color: #ffffff !important;
+        opacity: 1 !important;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.8) !important;
+      }
+      button[aria-label="−1 Tip"]:disabled {
+        background-color: #121212 !important;
+        border: 2px solid rgba(218, 165, 32, 0.65) !important;
+        color: #ffffff !important;
+      }
+
+      /* +1 Tip inner button inside Hive Tips card */
+      [data-tutorial="live"] button > span.bg-white\/\[0\.07\] {
+        background-color: #1a1a1a !important;
+        border: 1.5px solid #daa520 !important;
+        color: #ffffff !important;
+      }
+
+      /* Robot 1 / Robot 2 panel & Leave / Park buttons: solid black card, white text */
+      [data-tutorial="robots"] {
+        background-color: #0c0c0c !important;
+        border: 2px solid #daa520 !important;
+        border-radius: 1rem !important;
+        padding: 0.75rem 1rem !important;
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.8) !important;
+      }
+      [data-tutorial="robots"] span,
+      [data-tutorial="robots"] p {
+        color: #ffffff !important;
+      }
+      [data-tutorial="robots"] button[role="checkbox"] {
+        background-color: #161616 !important;
+        border: 2px solid rgba(218, 165, 32, 0.65) !important;
+        color: #ffffff !important;
+      }
+      [data-tutorial="robots"] button[role="checkbox"][aria-checked="true"] {
+        background-color: #daa520 !important;
+        border-color: #ffd700 !important;
+        color: #000000 !important;
+        font-weight: 700 !important;
+      }
+      [data-tutorial="robots"] button[role="checkbox"][aria-checked="true"] span,
+      [data-tutorial="robots"] button[role="checkbox"][aria-checked="true"] svg {
+        color: #000000 !important;
+      }
+
+      /* Unlocks / Mark Park (End), count, then save status bar: solid black, white text, gold border */
+      .bg-white\/\[0\.06\] {
+        background-color: #0c0c0c !important;
+        border: 2px solid #daa520 !important;
+        color: #ffffff !important;
+        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.8) !important;
+      }
+      .bg-white\/\[0\.06\] span,
+      .bg-white\/\[0\.06\] svg {
+        color: #ffffff !important;
+      }
+
+      /* End of Match counters (Owned flower pieces, Flower nectar, Left in Hive, Garden) & Fouls */
+      [data-tutorial="end-of-match"] > div[role="group"],
+      [data-tutorial="penalties"] {
+        background-color: #0c0c0c !important;
+        border: 2px solid #daa520 !important;
+        border-radius: 1rem !important;
+        padding: 0.75rem 0.875rem !important;
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.8) !important;
+      }
+      [data-tutorial="end-of-match"] span,
+      [data-tutorial="end-of-match"] p,
+      [data-tutorial="penalties"] span,
+      [data-tutorial="penalties"] h3,
+      [data-tutorial="penalties"] p {
+        color: #ffffff !important;
+      }
+      [data-joined] {
+        background-color: #161616 !important;
+        border: 1.5px solid #daa520 !important;
+      }
+      [data-joined] input {
+        background-color: #111111 !important;
+        color: #ffffff !important;
+        border-color: rgba(218, 165, 32, 0.45) !important;
+      }
+      [data-joined] button {
+        background-color: #1a1a1a !important;
+        color: #ffffff !important;
+      }
+      [data-joined] button:hover:not(:disabled) {
+        background-color: #daa520 !important;
+        color: #000000 !important;
+      }
+      [data-joined] button:disabled {
+        color: rgba(255, 255, 255, 0.55) !important;
+      }
+
+      /* Match timer & status bar & Session Notes card: solid black for high contrast */
+      [data-tutorial="timer"] {
+        background-color: #0c0c0c !important;
+        border: 2px solid #daa520 !important;
+        border-radius: 1rem !important;
+        padding: 0.75rem 1rem !important;
+        margin-left: 1rem;
+        margin-right: 1rem;
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.8) !important;
+      }
+      [data-tutorial="timer"] h1,
+      [data-tutorial="timer"] [data-match-status],
+      [data-tutorial="timer"] [data-match-status] span {
+        color: #ffffff !important;
+      }
+      [data-tutorial="notes"],
+      [data-match-log] {
+        background-color: #0c0c0c !important;
+        border: 2px solid #daa520 !important;
+        border-radius: 1rem !important;
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.8) !important;
+      }
+      [data-tutorial="notes"] {
+        padding: 0.5rem 1rem !important;
+      }
+      [data-tutorial="notes"] span,
+      [data-tutorial="notes"] svg,
+      [data-match-log] h2,
+      [data-match-log] span,
+      [data-match-log] p {
+        color: #ffffff !important;
+      }
+
+      /* Hide theme selector */
+      button[aria-label="Select theme"] {
+        display: none !important;
+      }
+      
+      /* Bee animations */
+      .bees-container {
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        z-index: 45;
+        overflow: hidden;
+      }
+
+      .bee {
+        position: absolute;
+        width: var(--bee-size, 54px);
+        height: var(--bee-size, 54px);
+        pointer-events: none;
+        opacity: 0.96;
+        filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.7)) drop-shadow(0 0 10px rgba(255, 215, 0, 0.35));
+        will-change: transform;
+      }
+
+      .bee svg {
+        width: 100%;
+        height: 100%;
+        overflow: visible;
+        animation: bee-bob 1.6s ease-in-out infinite;
+      }
+
+      .bee .wing-back {
+        transform-origin: 48px 42px;
+        animation: flap-back 0.14s ease-in-out infinite alternate;
+      }
+
+      .bee .wing-front {
+        transform-origin: 54px 42px;
+        animation: flap-front 0.14s ease-in-out infinite alternate;
+      }
+
+      @keyframes flap-front {
+        0% { transform: rotate(-18deg) scaleY(1); }
+        100% { transform: rotate(28deg) scaleY(0.75); }
+      }
+
+      @keyframes flap-back {
+        0% { transform: rotate(15deg) scaleY(0.8); }
+        100% { transform: rotate(-25deg) scaleY(1); }
+      }
+
+      @keyframes bee-bob {
+        0%, 100% { transform: translateY(0px) rotate(-3deg); }
+        50% { transform: translateY(-4px) rotate(4deg); }
+      }
+
+      /* Bee SVG faces RIGHT by default: scaleX(1) when moving right, scaleX(-1) when moving left */
+      @keyframes fly-loop-1 {
+        0%   { transform: translate(0, 0) rotate(5deg) scaleX(1); }
+        22%  { transform: translate(14vw, -6vh) rotate(-6deg) scaleX(1); }
+        48%  { transform: translate(28vw, 3vh) rotate(4deg) scaleX(1); }
+        50%  { transform: translate(28vw, 3vh) rotate(-4deg) scaleX(-1); }
+        75%  { transform: translate(14vw, 8vh) rotate(6deg) scaleX(-1); }
+        98%  { transform: translate(0, 0) rotate(-5deg) scaleX(-1); }
+        100% { transform: translate(0, 0) rotate(5deg) scaleX(1); }
+      }
+
+      @keyframes fly-loop-2 {
+        0%   { transform: translate(0, 0) rotate(-4deg) scaleX(-1); }
+        24%  { transform: translate(-16vw, 7vh) rotate(6deg) scaleX(-1); }
+        48%  { transform: translate(-30vw, -4vh) rotate(-5deg) scaleX(-1); }
+        50%  { transform: translate(-30vw, -4vh) rotate(5deg) scaleX(1); }
+        75%  { transform: translate(-15vw, -9vh) rotate(-6deg) scaleX(1); }
+        98%  { transform: translate(0, 0) rotate(4deg) scaleX(1); }
+        100% { transform: translate(0, 0) rotate(-4deg) scaleX(-1); }
+      }
+
+      @keyframes fly-loop-3 {
+        0%   { transform: translate(0, 0) rotate(-6deg) scaleX(1); }
+        20%  { transform: translate(10vw, 8vh) rotate(8deg) scaleX(1); }
+        45%  { transform: translate(22vw, -5vh) rotate(-4deg) scaleX(1); }
+        48%  { transform: translate(22vw, -5vh) rotate(4deg) scaleX(-1); }
+        72%  { transform: translate(9vw, -10vh) rotate(-7deg) scaleX(-1); }
+        97%  { transform: translate(0, 0) rotate(5deg) scaleX(-1); }
+        100% { transform: translate(0, 0) rotate(-6deg) scaleX(1); }
+      }
+
+      @keyframes fly-loop-4 {
+        0%   { transform: translate(0, 0) rotate(4deg) scaleX(-1); }
+        30%  { transform: translate(-12vw, -8vh) rotate(-8deg) scaleX(-1); }
+        49%  { transform: translate(-22vw, 2vh) rotate(5deg) scaleX(-1); }
+        51%  { transform: translate(-22vw, 2vh) rotate(-5deg) scaleX(1); }
+        78%  { transform: translate(-10vw, 9vh) rotate(7deg) scaleX(1); }
+        98%  { transform: translate(0, 0) rotate(-4deg) scaleX(1); }
+        100% { transform: translate(0, 0) rotate(4deg) scaleX(-1); }
+      }
+
+      .bee-1 { top: 12%; left: 6%;  --bee-size: 58px; animation: fly-loop-1 18s infinite ease-in-out; }
+      .bee-2 { top: 22%; left: 88%; --bee-size: 50px; animation: fly-loop-2 21s infinite ease-in-out -4s; }
+      .bee-3 { top: 48%; left: 10%; --bee-size: 54px; animation: fly-loop-3 16s infinite ease-in-out -7s; }
+      .bee-4 { top: 68%; left: 85%; --bee-size: 62px; animation: fly-loop-4 20s infinite ease-in-out -2s; }
+      .bee-5 { top: 82%; left: 18%; --bee-size: 48px; animation: fly-loop-1 23s infinite ease-in-out -11s; }
+      .bee-6 { top: 35%; left: 78%; --bee-size: 54px; animation: fly-loop-2 17s infinite ease-in-out -9s; }
+      .bee-7 { top: 16%; left: 45%; --bee-size: 46px; animation: fly-loop-3 22s infinite ease-in-out -14s; }
+      .bee-8 { top: 86%; left: 72%; --bee-size: 52px; animation: fly-loop-4 19s infinite ease-in-out -6s; }
+      .bee-9 { top: 58%; left: 42%; --bee-size: 50px; animation: fly-loop-1 25s infinite ease-in-out -13s; }
+    </style>
+    <!--
+      Fonts load without blocking render: the stylesheet is fetched as a
+      print sheet and switched on when it arrives, so a network that drops
+      Google Fonts still shows the app (in the fallback font stack).
+    -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;family=Montserrat:wght@700;900&amp;family=Righteous&amp;display=swap"
+      media="print"
+      onload="this.media='all'"
+    />
+    <noscript>
+      <link
+        rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;family=Montserrat:wght@700;900&amp;family=Righteous&amp;display=swap"
+      />
+    </noscript>
+    <script type="module" crossorigin src="./assets/index-CrUxzRby.js"></script>
+    <link rel="modulepreload" crossorigin href="./assets/vendor-react-BrRUuK2M.js">
+    <link rel="modulepreload" crossorigin href="./assets/vendor-firebase-BlwbxS6q.js">
+    <link rel="stylesheet" crossorigin href="./assets/index-BwxjkVXD.css">
+  </head>
+  <body>
+    <!-- 2D Bees bay bay nho nhỏ -->
+    <div class="bees-container" aria-hidden="true">
+      <svg width="0" height="0" style="position:absolute">
+        <defs>
+          <clipPath id="bee-body-clip">
+            <ellipse cx="52" cy="56" rx="22" ry="15" />
+          </clipPath>
+        </defs>
+      </svg>
+
+      <div class="bee bee-1">
+        <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+          <g class="wing-back">
+            <ellipse cx="44" cy="34" rx="11" ry="16" fill="rgba(220, 245, 255, 0.85)" stroke="#1a1a1a" stroke-width="2.5" transform="rotate(-28 44 34)"/>
+          </g>
+          <path d="M 30 56 L 19 56 L 28 51 Z" fill="#1a1a1a" stroke="#1a1a1a" stroke-width="1.5" stroke-linejoin="round"/>
+          <g clip-path="url(#bee-body-clip)">
+            <ellipse cx="52" cy="56" rx="22" ry="15" fill="#FFD700"/>
+            <rect x="34" y="38" width="6" height="36" fill="#1a1a1a"/>
+            <rect x="46" y="38" width="6" height="36" fill="#1a1a1a"/>
+            <rect x="58" y="38" width="5" height="36" fill="#1a1a1a"/>
+            <ellipse cx="52" cy="46" rx="18" ry="5" fill="rgba(255, 255, 255, 0.28)"/>
+          </g>
+          <ellipse cx="52" cy="56" rx="22" ry="15" fill="none" stroke="#1a1a1a" stroke-width="3"/>
+          <path d="M 65 44 Q 70 33 76 35" fill="none" stroke="#1a1a1a" stroke-width="2.5" stroke-linecap="round"/>
+          <circle cx="76" cy="35" r="2.5" fill="#1a1a1a"/>
+          <path d="M 69 46 Q 76 36 81 39" fill="none" stroke="#1a1a1a" stroke-width="2.5" stroke-linecap="round"/>
+          <circle cx="81" cy="39" r="2.5" fill="#1a1a1a"/>
+          <circle cx="66" cy="53" r="3.2" fill="#1a1a1a"/>
+          <circle cx="67" cy="51.8" r="1.2" fill="#ffffff"/>
+          <ellipse cx="64" cy="58" rx="2.8" ry="1.8" fill="#ff7b89" opacity="0.85"/>
+          <path d="M 67 57 Q 70 59.5 72 57" fill="none" stroke="#1a1a1a" stroke-width="2" stroke-linecap="round"/>
+          <g class="wing-front">
+            <ellipse cx="52" cy="35" rx="12" ry="17" fill="rgba(245, 252, 255, 0.92)" stroke="#1a1a1a" stroke-width="2.5" transform="rotate(-12 52 35)"/>
+            <path d="M 52 44 Q 50 34 55 25" fill="none" stroke="rgba(130, 190, 220, 0.7)" stroke-width="1.5" stroke-linecap="round"/>
+          </g>
+        </svg>
+      </div>
+
+      <div class="bee bee-2">
+        <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+          <g class="wing-back"><ellipse cx="44" cy="34" rx="11" ry="16" fill="rgba(220, 245, 255, 0.85)" stroke="#1a1a1a" stroke-width="2.5" transform="rotate(-28 44 34)"/></g>
+          <path d="M 30 56 L 19 56 L 28 51 Z" fill="#1a1a1a" stroke="#1a1a1a" stroke-width="1.5" stroke-linejoin="round"/>
+          <g clip-path="url(#bee-body-clip)">
+            <ellipse cx="52" cy="56" rx="22" ry="15" fill="#FFD700"/>
+            <rect x="34" y="38" width="6" height="36" fill="#1a1a1a"/>
+            <rect x="46" y="38" width="6" height="36" fill="#1a1a1a"/>
+            <rect x="58" y="38" width="5" height="36" fill="#1a1a1a"/>
+            <ellipse cx="52" cy="46" rx="18" ry="5" fill="rgba(255, 255, 255, 0.28)"/>
+          </g>
+          <ellipse cx="52" cy="56" rx="22" ry="15" fill="none" stroke="#1a1a1a" stroke-width="3"/>
+          <path d="M 65 44 Q 70 33 76 35" fill="none" stroke="#1a1a1a" stroke-width="2.5" stroke-linecap="round"/><circle cx="76" cy="35" r="2.5" fill="#1a1a1a"/>
+          <path d="M 69 46 Q 76 36 81 39" fill="none" stroke="#1a1a1a" stroke-width="2.5" stroke-linecap="round"/><circle cx="81" cy="39" r="2.5" fill="#1a1a1a"/>
+          <circle cx="66" cy="53" r="3.2" fill="#1a1a1a"/><circle cx="67" cy="51.8" r="1.2" fill="#ffffff"/>
+          <ellipse cx="64" cy="58" rx="2.8" ry="1.8" fill="#ff7b89" opacity="0.85"/>
+          <path d="M 67 57 Q 70 59.5 72 57" fill="none" stroke="#1a1a1a" stroke-width="2" stroke-linecap="round"/>
+          <g class="wing-front"><ellipse cx="52" cy="35" rx="12" ry="17" fill="rgba(245, 252, 255, 0.92)" stroke="#1a1a1a" stroke-width="2.5" transform="rotate(-12 52 35)"/></g>
+        </svg>
+      </div>
+
+      <div class="bee bee-3">
+        <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+          <g class="wing-back"><ellipse cx="44" cy="34" rx="11" ry="16" fill="rgba(220, 245, 255, 0.85)" stroke="#1a1a1a" stroke-width="2.5" transform="rotate(-28 44 34)"/></g>
+          <path d="M 30 56 L 19 56 L 28 51 Z" fill="#1a1a1a" stroke="#1a1a1a" stroke-width="1.5" stroke-linejoin="round"/>
+          <g clip-path="url(#bee-body-clip)">
+            <ellipse cx="52" cy="56" rx="22" ry="15" fill="#FFD700"/>
+            <rect x="34" y="38" width="6" height="36" fill="#1a1a1a"/>
+            <rect x="46" y="38" width="6" height="36" fill="#1a1a1a"/>
+            <rect x="58" y="38" width="5" height="36" fill="#1a1a1a"/>
+            <ellipse cx="52" cy="46" rx="18" ry="5" fill="rgba(255, 255, 255, 0.28)"/>
+          </g>
+          <ellipse cx="52" cy="56" rx="22" ry="15" fill="none" stroke="#1a1a1a" stroke-width="3"/>
+          <path d="M 65 44 Q 70 33 76 35" fill="none" stroke="#1a1a1a" stroke-width="2.5" stroke-linecap="round"/><circle cx="76" cy="35" r="2.5" fill="#1a1a1a"/>
+          <path d="M 69 46 Q 76 36 81 39" fill="none" stroke="#1a1a1a" stroke-width="2.5" stroke-linecap="round"/><circle cx="81" cy="39" r="2.5" fill="#1a1a1a"/>
+          <circle cx="66" cy="53" r="3.2" fill="#1a1a1a"/><circle cx="67" cy="51.8" r="1.2" fill="#ffffff"/>
+          <ellipse cx="64" cy="58" rx="2.8" ry="1.8" fill="#ff7b89" opacity="0.85"/>
+          <path d="M 67 57 Q 70 59.5 72 57" fill="none" stroke="#1a1a1a" stroke-width="2" stroke-linecap="round"/>
+          <g class="wing-front"><ellipse cx="52" cy="35" rx="12" ry="17" fill="rgba(245, 252, 255, 0.92)" stroke="#1a1a1a" stroke-width="2.5" transform="rotate(-12 52 35)"/></g>
+        </svg>
+      </div>
+
+      <div class="bee bee-4">
+        <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+          <g class="wing-back"><ellipse cx="44" cy="34" rx="11" ry="16" fill="rgba(220, 245, 255, 0.85)" stroke="#1a1a1a" stroke-width="2.5" transform="rotate(-28 44 34)"/></g>
+          <path d="M 30 56 L 19 56 L 28 51 Z" fill="#1a1a1a" stroke="#1a1a1a" stroke-width="1.5" stroke-linejoin="round"/>
+          <g clip-path="url(#bee-body-clip)">
+            <ellipse cx="52" cy="56" rx="22" ry="15" fill="#FFD700"/>
+            <rect x="34" y="38" width="6" height="36" fill="#1a1a1a"/>
+            <rect x="46" y="38" width="6" height="36" fill="#1a1a1a"/>
+            <rect x="58" y="38" width="5" height="36" fill="#1a1a1a"/>
+            <ellipse cx="52" cy="46" rx="18" ry="5" fill="rgba(255, 255, 255, 0.28)"/>
+          </g>
+          <ellipse cx="52" cy="56" rx="22" ry="15" fill="none" stroke="#1a1a1a" stroke-width="3"/>
+          <path d="M 65 44 Q 70 33 76 35" fill="none" stroke="#1a1a1a" stroke-width="2.5" stroke-linecap="round"/><circle cx="76" cy="35" r="2.5" fill="#1a1a1a"/>
+          <path d="M 69 46 Q 76 36 81 39" fill="none" stroke="#1a1a1a" stroke-width="2.5" stroke-linecap="round"/><circle cx="81" cy="39" r="2.5" fill="#1a1a1a"/>
+          <circle cx="66" cy="53" r="3.2" fill="#1a1a1a"/><circle cx="67" cy="51.8" r="1.2" fill="#ffffff"/>
+          <ellipse cx="64" cy="58" rx="2.8" ry="1.8" fill="#ff7b89" opacity="0.85"/>
+          <path d="M 67 57 Q 70 59.5 72 57" fill="none" stroke="#1a1a1a" stroke-width="2" stroke-linecap="round"/>
+          <g class="wing-front"><ellipse cx="52" cy="35" rx="12" ry="17" fill="rgba(245, 252, 255, 0.92)" stroke="#1a1a1a" stroke-width="2.5" transform="rotate(-12 52 35)"/></g>
+        </svg>
+      </div>
+
+      <div class="bee bee-5">
+        <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+          <g class="wing-back"><ellipse cx="44" cy="34" rx="11" ry="16" fill="rgba(220, 245, 255, 0.85)" stroke="#1a1a1a" stroke-width="2.5" transform="rotate(-28 44 34)"/></g>
+          <path d="M 30 56 L 19 56 L 28 51 Z" fill="#1a1a1a" stroke="#1a1a1a" stroke-width="1.5" stroke-linejoin="round"/>
+          <g clip-path="url(#bee-body-clip)">
+            <ellipse cx="52" cy="56" rx="22" ry="15" fill="#FFD700"/>
+            <rect x="34" y="38" width="6" height="36" fill="#1a1a1a"/>
+            <rect x="46" y="38" width="6" height="36" fill="#1a1a1a"/>
+            <rect x="58" y="38" width="5" height="36" fill="#1a1a1a"/>
+            <ellipse cx="52" cy="46" rx="18" ry="5" fill="rgba(255, 255, 255, 0.28)"/>
+          </g>
+          <ellipse cx="52" cy="56" rx="22" ry="15" fill="none" stroke="#1a1a1a" stroke-width="3"/>
+          <path d="M 65 44 Q 70 33 76 35" fill="none" stroke="#1a1a1a" stroke-width="2.5" stroke-linecap="round"/><circle cx="76" cy="35" r="2.5" fill="#1a1a1a"/>
+          <path d="M 69 46 Q 76 36 81 39" fill="none" stroke="#1a1a1a" stroke-width="2.5" stroke-linecap="round"/><circle cx="81" cy="39" r="2.5" fill="#1a1a1a"/>
+          <circle cx="66" cy="53" r="3.2" fill="#1a1a1a"/><circle cx="67" cy="51.8" r="1.2" fill="#ffffff"/>
+          <ellipse cx="64" cy="58" rx="2.8" ry="1.8" fill="#ff7b89" opacity="0.85"/>
+          <path d="M 67 57 Q 70 59.5 72 57" fill="none" stroke="#1a1a1a" stroke-width="2" stroke-linecap="round"/>
+          <g class="wing-front"><ellipse cx="52" cy="35" rx="12" ry="17" fill="rgba(245, 252, 255, 0.92)" stroke="#1a1a1a" stroke-width="2.5" transform="rotate(-12 52 35)"/></g>
+        </svg>
+      </div>
+
+      <div class="bee bee-6">
+        <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+          <g class="wing-back"><ellipse cx="44" cy="34" rx="11" ry="16" fill="rgba(220, 245, 255, 0.85)" stroke="#1a1a1a" stroke-width="2.5" transform="rotate(-28 44 34)"/></g>
+          <path d="M 30 56 L 19 56 L 28 51 Z" fill="#1a1a1a" stroke="#1a1a1a" stroke-width="1.5" stroke-linejoin="round"/>
+          <g clip-path="url(#bee-body-clip)">
+            <ellipse cx="52" cy="56" rx="22" ry="15" fill="#FFD700"/>
+            <rect x="34" y="38" width="6" height="36" fill="#1a1a1a"/>
+            <rect x="46" y="38" width="6" height="36" fill="#1a1a1a"/>
+            <rect x="58" y="38" width="5" height="36" fill="#1a1a1a"/>
+            <ellipse cx="52" cy="46" rx="18" ry="5" fill="rgba(255, 255, 255, 0.28)"/>
+          </g>
+          <ellipse cx="52" cy="56" rx="22" ry="15" fill="none" stroke="#1a1a1a" stroke-width="3"/>
+          <path d="M 65 44 Q 70 33 76 35" fill="none" stroke="#1a1a1a" stroke-width="2.5" stroke-linecap="round"/><circle cx="76" cy="35" r="2.5" fill="#1a1a1a"/>
+          <path d="M 69 46 Q 76 36 81 39" fill="none" stroke="#1a1a1a" stroke-width="2.5" stroke-linecap="round"/><circle cx="81" cy="39" r="2.5" fill="#1a1a1a"/>
+          <circle cx="66" cy="53" r="3.2" fill="#1a1a1a"/><circle cx="67" cy="51.8" r="1.2" fill="#ffffff"/>
+          <ellipse cx="64" cy="58" rx="2.8" ry="1.8" fill="#ff7b89" opacity="0.85"/>
+          <path d="M 67 57 Q 70 59.5 72 57" fill="none" stroke="#1a1a1a" stroke-width="2" stroke-linecap="round"/>
+          <g class="wing-front"><ellipse cx="52" cy="35" rx="12" ry="17" fill="rgba(245, 252, 255, 0.92)" stroke="#1a1a1a" stroke-width="2.5" transform="rotate(-12 52 35)"/></g>
+        </svg>
+      </div>
+
+      <div class="bee bee-7">
+        <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+          <g class="wing-back"><ellipse cx="44" cy="34" rx="11" ry="16" fill="rgba(220, 245, 255, 0.85)" stroke="#1a1a1a" stroke-width="2.5" transform="rotate(-28 44 34)"/></g>
+          <path d="M 30 56 L 19 56 L 28 51 Z" fill="#1a1a1a" stroke="#1a1a1a" stroke-width="1.5" stroke-linejoin="round"/>
+          <g clip-path="url(#bee-body-clip)">
+            <ellipse cx="52" cy="56" rx="22" ry="15" fill="#FFD700"/>
+            <rect x="34" y="38" width="6" height="36" fill="#1a1a1a"/>
+            <rect x="46" y="38" width="6" height="36" fill="#1a1a1a"/>
+            <rect x="58" y="38" width="5" height="36" fill="#1a1a1a"/>
+            <ellipse cx="52" cy="46" rx="18" ry="5" fill="rgba(255, 255, 255, 0.28)"/>
+          </g>
+          <ellipse cx="52" cy="56" rx="22" ry="15" fill="none" stroke="#1a1a1a" stroke-width="3"/>
+          <path d="M 65 44 Q 70 33 76 35" fill="none" stroke="#1a1a1a" stroke-width="2.5" stroke-linecap="round"/><circle cx="76" cy="35" r="2.5" fill="#1a1a1a"/>
+          <path d="M 69 46 Q 76 36 81 39" fill="none" stroke="#1a1a1a" stroke-width="2.5" stroke-linecap="round"/><circle cx="81" cy="39" r="2.5" fill="#1a1a1a"/>
+          <circle cx="66" cy="53" r="3.2" fill="#1a1a1a"/><circle cx="67" cy="51.8" r="1.2" fill="#ffffff"/>
+          <ellipse cx="64" cy="58" rx="2.8" ry="1.8" fill="#ff7b89" opacity="0.85"/>
+          <path d="M 67 57 Q 70 59.5 72 57" fill="none" stroke="#1a1a1a" stroke-width="2" stroke-linecap="round"/>
+          <g class="wing-front"><ellipse cx="52" cy="35" rx="12" ry="17" fill="rgba(245, 252, 255, 0.92)" stroke="#1a1a1a" stroke-width="2.5" transform="rotate(-12 52 35)"/></g>
+        </svg>
+      </div>
+
+      <div class="bee bee-8">
+        <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+          <g class="wing-back"><ellipse cx="44" cy="34" rx="11" ry="16" fill="rgba(220, 245, 255, 0.85)" stroke="#1a1a1a" stroke-width="2.5" transform="rotate(-28 44 34)"/></g>
+          <path d="M 30 56 L 19 56 L 28 51 Z" fill="#1a1a1a" stroke="#1a1a1a" stroke-width="1.5" stroke-linejoin="round"/>
+          <g clip-path="url(#bee-body-clip)">
+            <ellipse cx="52" cy="56" rx="22" ry="15" fill="#FFD700"/>
+            <rect x="34" y="38" width="6" height="36" fill="#1a1a1a"/>
+            <rect x="46" y="38" width="6" height="36" fill="#1a1a1a"/>
+            <rect x="58" y="38" width="5" height="36" fill="#1a1a1a"/>
+            <ellipse cx="52" cy="46" rx="18" ry="5" fill="rgba(255, 255, 255, 0.28)"/>
+          </g>
+          <ellipse cx="52" cy="56" rx="22" ry="15" fill="none" stroke="#1a1a1a" stroke-width="3"/>
+          <path d="M 65 44 Q 70 33 76 35" fill="none" stroke="#1a1a1a" stroke-width="2.5" stroke-linecap="round"/><circle cx="76" cy="35" r="2.5" fill="#1a1a1a"/>
+          <path d="M 69 46 Q 76 36 81 39" fill="none" stroke="#1a1a1a" stroke-width="2.5" stroke-linecap="round"/><circle cx="81" cy="39" r="2.5" fill="#1a1a1a"/>
+          <circle cx="66" cy="53" r="3.2" fill="#1a1a1a"/><circle cx="67" cy="51.8" r="1.2" fill="#ffffff"/>
+          <ellipse cx="64" cy="58" rx="2.8" ry="1.8" fill="#ff7b89" opacity="0.85"/>
+          <path d="M 67 57 Q 70 59.5 72 57" fill="none" stroke="#1a1a1a" stroke-width="2" stroke-linecap="round"/>
+          <g class="wing-front"><ellipse cx="52" cy="35" rx="12" ry="17" fill="rgba(245, 252, 255, 0.92)" stroke="#1a1a1a" stroke-width="2.5" transform="rotate(-12 52 35)"/></g>
+        </svg>
+      </div>
+
+      <div class="bee bee-9">
+        <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+          <g class="wing-back"><ellipse cx="44" cy="34" rx="11" ry="16" fill="rgba(220, 245, 255, 0.85)" stroke="#1a1a1a" stroke-width="2.5" transform="rotate(-28 44 34)"/></g>
+          <path d="M 30 56 L 19 56 L 28 51 Z" fill="#1a1a1a" stroke="#1a1a1a" stroke-width="1.5" stroke-linejoin="round"/>
+          <g clip-path="url(#bee-body-clip)">
+            <ellipse cx="52" cy="56" rx="22" ry="15" fill="#FFD700"/>
+            <rect x="34" y="38" width="6" height="36" fill="#1a1a1a"/>
+            <rect x="46" y="38" width="6" height="36" fill="#1a1a1a"/>
+            <rect x="58" y="38" width="5" height="36" fill="#1a1a1a"/>
+            <ellipse cx="52" cy="46" rx="18" ry="5" fill="rgba(255, 255, 255, 0.28)"/>
+          </g>
+          <ellipse cx="52" cy="56" rx="22" ry="15" fill="none" stroke="#1a1a1a" stroke-width="3"/>
+          <path d="M 65 44 Q 70 33 76 35" fill="none" stroke="#1a1a1a" stroke-width="2.5" stroke-linecap="round"/><circle cx="76" cy="35" r="2.5" fill="#1a1a1a"/>
+          <path d="M 69 46 Q 76 36 81 39" fill="none" stroke="#1a1a1a" stroke-width="2.5" stroke-linecap="round"/><circle cx="81" cy="39" r="2.5" fill="#1a1a1a"/>
+          <circle cx="66" cy="53" r="3.2" fill="#1a1a1a"/><circle cx="67" cy="51.8" r="1.2" fill="#ffffff"/>
+          <ellipse cx="64" cy="58" rx="2.8" ry="1.8" fill="#ff7b89" opacity="0.85"/>
+          <path d="M 67 57 Q 70 59.5 72 57" fill="none" stroke="#1a1a1a" stroke-width="2" stroke-linecap="round"/>
+          <g class="wing-front"><ellipse cx="52" cy="35" rx="12" ry="17" fill="rgba(245, 252, 255, 0.92)" stroke="#1a1a1a" stroke-width="2.5" transform="rotate(-12 52 35)"/></g>
+        </svg>
+      </div>
+    </div>
+    <div id="root"></div>
+  </body>
+</html>
