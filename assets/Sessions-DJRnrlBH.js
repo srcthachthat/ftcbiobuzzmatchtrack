@@ -90,7 +90,7 @@ function writeLocalSavedSessions(list) {
 const Sessions = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { sessionData, hasStarted, replaceSessionData, setHasStarted } = useSession();
+  const { resetSession, replaceSessionData, setHasStarted } = useSession();
 
   const [sessions, setSessions] = React.useState(() => readLocalSavedSessions());
   const [loadingCloud, setLoadingCloud] = React.useState(false);
@@ -104,6 +104,18 @@ const Sessions = () => {
 
   React.useEffect(() => {
     document.title = "Sessions - Scienceroboticsclub 28785";
+    try {
+      const aud = window.__src28785_match_audio__;
+      if (aud) {
+        aud.pause();
+        aud.currentTime = 0;
+      }
+      sessionStorage.removeItem("src28785-audio-state");
+    } catch {}
+    if (typeof resetSession === "function") {
+      resetSession({ discardDraft: true });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadAllSessions = React.useCallback(async () => {
@@ -147,10 +159,7 @@ const Sessions = () => {
     return () => window.removeEventListener("click", closeMenu);
   }, []);
 
-  const hasActiveSession =
-    sessionData &&
-    !sessionData.isSessionCompleted &&
-    (hasStarted || (sessionData.matches && sessionData.matches.length > 0));
+  const hasActiveSession = false;
 
   const handleOpenInTracker = (session, e) => {
     if (e) e.stopPropagation();
