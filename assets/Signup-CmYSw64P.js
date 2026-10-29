@@ -39,7 +39,7 @@ const Signup = () => {
 
   React.useEffect(() => {
     if (user) {
-      navigate(ROUTES.ACTIVE, { replace: true });
+      navigate(ROUTES.SESSIONS, { replace: true });
     }
   }, [user, navigate]);
 
@@ -54,7 +54,7 @@ const Signup = () => {
     try {
       await signup(email, password, name);
       toast.success("Account created!");
-      navigate(ROUTES.ACTIVE);
+      navigate(ROUTES.SESSIONS);
     } catch (err) {
       console.error("Signup error:", err);
       const msg = formatAuthError(err);
@@ -204,7 +204,7 @@ const Signup = () => {
             try {
               await loginWithGoogle();
               toast.success("Signed in with Google!");
-              navigate(ROUTES.ACTIVE);
+              navigate(ROUTES.SESSIONS);
             } catch (e) {
               console.error("Google sign-in error:", e);
               const msg = formatAuthError(e);

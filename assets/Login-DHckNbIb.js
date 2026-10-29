@@ -34,7 +34,7 @@ const Login = () => {
 
   React.useEffect(() => {
     if (user) {
-      navigate(ROUTES.ACTIVE, { replace: true });
+      navigate(ROUTES.SESSIONS, { replace: true });
     }
   }, [user, navigate]);
 
@@ -45,7 +45,7 @@ const Login = () => {
     try {
       await login(email, password);
       toast.success("Signed in!");
-      navigate(ROUTES.ACTIVE);
+      navigate(ROUTES.SESSIONS);
     } catch (err) {
       console.error("Login error:", err);
       const msg = formatAuthError(err);
@@ -151,7 +151,7 @@ const Login = () => {
                 try {
                   await loginWithGoogle();
                   toast.success("Signed in with Google!");
-                  navigate(ROUTES.ACTIVE);
+                  navigate(ROUTES.SESSIONS);
                 } catch (e) {
                   console.error("Google sign-in error:", e);
                   const msg = formatAuthError(e);
@@ -169,7 +169,7 @@ const Login = () => {
               type: "button",
               onClick: () => {
                 continueAsGuest();
-                navigate(ROUTES.ACTIVE);
+                navigate(ROUTES.SESSIONS);
               },
               className: "w-full h-12 rounded-md border border-[#DAA520] text-white hover:bg-[#DAA520]/10 transition-colors",
               children: "Continue as guest"

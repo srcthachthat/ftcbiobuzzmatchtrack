@@ -278,6 +278,59 @@ const Sessions = () => {
     });
   }, [sessions, search, matchTypeFilter, sortBy, showArchived]);
 
+  if (sessions.length === 0) {
+    return u.jsx("div", {
+      className: "flex-1 flex items-center justify-center p-4 min-h-[72vh] relative z-10",
+      children: u.jsxs("div", {
+        className: "w-full max-w-md p-8 rounded-2xl border-2 text-center space-y-4",
+        style: {
+          backgroundColor: "#0c0c0c",
+          borderColor: "#DAA520",
+          color: "#ffffff",
+          boxShadow: "0 14px 40px rgba(0, 0, 0, 0.94)"
+        },
+        children: [
+          u.jsx("div", {
+            className: "inline-flex items-center justify-center w-12 h-12 rounded-full border border-[#DAA520]/60 bg-[#26200d] text-2xl mx-auto",
+            children: "🐝"
+          }),
+          u.jsx("h1", {
+            className: "text-2xl sm:text-3xl font-montserrat italic font-bold tracking-tight",
+            style: { color: "#FFD700" },
+            children: "Scienceroboticsclub 28785"
+          }),
+          u.jsx("p", {
+            className: "text-xs font-bold uppercase tracking-widest",
+            style: { color: "#DAA520" },
+            children: "FTC BIOBUZZ — Match & Session Tracker"
+          }),
+          u.jsx("p", {
+            className: "text-sm leading-relaxed",
+            style: { color: "#d4d4d4" },
+            children: loadingCloud
+              ? "Loading your saved sessions…"
+              : "No saved sessions yet. Start a new session in the Match Tracker to score matches, calculate Ranking Points, and view statistics charts."
+          }),
+          u.jsxs("div", {
+            className: "pt-2 flex flex-col sm:flex-row items-center justify-center gap-3",
+            children: [
+              u.jsx(Link, {
+                to: ROUTES.ACTIVE,
+                className:
+                  "w-full sm:w-auto inline-flex items-center justify-center px-6 py-3 rounded-xl font-bold text-sm transition-transform hover:scale-105",
+                style: {
+                  backgroundColor: "#DAA520",
+                  color: "#0a0a0a"
+                },
+                children: hasActiveSession ? "Continue Active Session →" : "Open Match Tracker"
+              })
+            ]
+          })
+        ]
+      })
+    });
+  }
+
   return u.jsx("div", {
     className: "flex-1 w-full max-w-[1152px] mx-auto px-4 sm:px-6 lg:px-8 py-6 relative z-10",
     children: u.jsxs("div", {
@@ -438,6 +491,17 @@ const Sessions = () => {
                 }),
                 "Archived"
               ]
+            }),
+
+            /* + New Session Button */
+            u.jsx(Link, {
+              to: ROUTES.ACTIVE,
+              className: "h-11 px-4 rounded-xl font-bold text-sm inline-flex items-center gap-1.5 ml-auto transition-transform hover:scale-105",
+              style: {
+                backgroundColor: "#DAA520",
+                color: "#0a0a0a"
+              },
+              children: "+ New Session"
             })
           ]
         }),
