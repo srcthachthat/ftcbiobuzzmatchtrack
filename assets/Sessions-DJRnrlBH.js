@@ -56,34 +56,33 @@ function computeSessionStats(session) {
   return { matchCount, best, avg, rp, duration };
 }
 
-function readLocalSavedSessions() {
+function readLocalSavedSessions(uid) {
+  try {
+    localStorage.removeItem("src28785-saved-sessions-v2");
+    localStorage.removeItem("src28785-guest-sessions");
+  } catch {}
+  if (!uid) return [];
   const map = new Map();
   try {
-    const v2Raw = localStorage.getItem("src28785-saved-sessions-v2");
+    const v2Raw = localStorage.getItem(`src28785-saved-sessions-v2-${uid}`);
     const v2List = v2Raw ? JSON.parse(v2Raw) : [];
     if (Array.isArray(v2List)) {
       for (const s of v2List) {
-        if (s && s.id) map.set(s.id, s);
-      }
-    }
-  } catch {}
-  try {
-    const guestList = getGuestSessions() || [];
-    if (Array.isArray(guestList)) {
-      for (const s of guestList) {
-        if (s && s.id && !map.has(s.id)) map.set(s.id, s);
+        if (s && s.id && (!s.userId || s.userId === uid)) map.set(s.id, s);
       }
     }
   } catch {}
   return [...map.values()].sort((a, b) => parseDateMs(b) - parseDateMs(a));
 }
 
-function writeLocalSavedSessions(list) {
+function writeLocalSavedSessions(uid, list) {
   try {
-    localStorage.setItem("src28785-saved-sessions-v2", JSON.stringify(list));
+    localStorage.removeItem("src28785-saved-sessions-v2");
+    localStorage.removeItem("src28785-guest-sessions");
   } catch {}
+  if (!uid) return;
   try {
-    setGuestSessions(list);
+    localStorage.setItem(`src28785-saved-sessions-v2-${uid}`, JSON.stringify(list));
   } catch {}
 }
 
@@ -92,7 +91,7 @@ const Sessions = () => {
   const { user } = useAuth();
   const { resetSession, replaceSessionData, setHasStarted } = useSession();
 
-  const [sessions, setSessions] = React.useState(() => readLocalSavedSessions());
+  const [sessions, setSessions] = React.useState(() => readLocalSavedSessions(user?.uid));
   const [loadingCloud, setLoadingCloud] = React.useState(false);
   const [search, setSearch] = React.useState("");
   const [matchTypeFilter, setMatchTypeFilter] = React.useState("ALL");
@@ -119,12 +118,14 @@ const Sessions = () => {
   }, []);
 
   const loadAllSessions = React.useCallback(async () => {
-    const localList = readLocalSavedSessions();
-    setSessions(localList);
-
     if (!user?.uid) {
+      readLocalSavedSessions(null);
+      setSessions([]);
       return;
     }
+
+    const localList = readLocalSavedSessions(user.uid);
+    setSessions(localList);
 
     setLoadingCloud(true);
     try {
@@ -140,7 +141,7 @@ const Sessions = () => {
         }
         const merged = [...map.values()].sort((a, b) => parseDateMs(b) - parseDateMs(a));
         setSessions(merged);
-        writeLocalSavedSessions(merged);
+        writeLocalSavedSessions(user.uid, merged);
       }
     } catch (e) {
       console.warn("Could not load cloud sessions, showing local sessions:", e);
@@ -166,8 +167,9 @@ const Sessions = () => {
     setOpenMenuId(null);
     if (typeof replaceSessionData === "function") {
       replaceSessionData({
-        sessionName: session.sessionName || "Practice 1",
-        sessionType: session.sessionType || "Practice",
+        sessionName: session.sessionName || "Match 1",
+        sessionType: session.sessionType || "Match",
+        robotCount: 2,
         matchType: session.matchType || "Full Game",
         selectedFeature: session.selectedFeature || "",
         notes: session.notes || "",
@@ -201,10 +203,12 @@ const Sessions = () => {
     const next = sessions.filter((s) => s.id !== id);
     setSessions(next);
     try {
-      const localNext = readLocalSavedSessions().filter((s) => s.id !== id);
-      writeLocalSavedSessions(localNext);
-      if (user?.uid && !String(id).startsWith("guest_")) {
-        firebaseService.deleteSession(id).catch(() => {});
+      if (user?.uid) {
+        const localNext = readLocalSavedSessions(user.uid).filter((s) => s.id !== id);
+        writeLocalSavedSessions(user.uid, localNext);
+        if (!String(id).startsWith("guest_")) {
+          firebaseService.deleteSession(id).catch(() => {});
+        }
       }
       toast.success(`Deleted "${session.sessionName || "Session"}"`);
     } catch (err) {
@@ -223,12 +227,15 @@ const Sessions = () => {
     );
     setSessions(updated);
     try {
-      const localList = readLocalSavedSessions();
-      writeLocalSavedSessions(
-        localList.map((s) => (s.id === session.id ? { ...s, archived: nextArchived } : s))
-      );
-      if (user?.uid && !String(session.id).startsWith("guest_")) {
-        firebaseService.updateSession(session.id, { archived: nextArchived }).catch(() => {});
+      if (user?.uid) {
+        const localList = readLocalSavedSessions(user.uid);
+        writeLocalSavedSessions(
+          user.uid,
+          localList.map((s) => (s.id === session.id ? { ...s, archived: nextArchived } : s))
+        );
+        if (!String(session.id).startsWith("guest_")) {
+          firebaseService.updateSession(session.id, { archived: nextArchived }).catch(() => {});
+        }
       }
       toast.success(nextArchived ? "Session archived" : "Session unarchived");
     } catch (err) {
@@ -246,12 +253,15 @@ const Sessions = () => {
       prev.map((s) => (s.id === targetId ? { ...s, sessionName: newName } : s))
     );
     try {
-      const localList = readLocalSavedSessions();
-      writeLocalSavedSessions(
-        localList.map((s) => (s.id === targetId ? { ...s, sessionName: newName } : s))
-      );
-      if (user?.uid && !String(targetId).startsWith("guest_")) {
-        firebaseService.updateSession(targetId, { sessionName: newName }).catch(() => {});
+      if (user?.uid) {
+        const localList = readLocalSavedSessions(user.uid);
+        writeLocalSavedSessions(
+          user.uid,
+          localList.map((s) => (s.id === targetId ? { ...s, sessionName: newName } : s))
+        );
+        if (!String(targetId).startsWith("guest_")) {
+          firebaseService.updateSession(targetId, { sessionName: newName }).catch(() => {});
+        }
       }
       toast.success("Session renamed");
     } catch (err) {
@@ -318,7 +328,9 @@ const Sessions = () => {
             style: { color: "#d4d4d4" },
             children: loadingCloud
               ? "Loading your saved sessions…"
-              : "No saved sessions yet. Start a new session in the Match Tracker to score matches, calculate Ranking Points, and view statistics charts."
+              : user?.uid
+              ? "No saved sessions yet. Start a new session in the Match Tracker to score matches, calculate Ranking Points, and view statistics charts."
+              : "Start a new session in the Match Tracker to score matches immediately. Sign in with your account (Gmail) to save sessions permanently — without signing in, data will be cleared when you leave or close the site."
           }),
           u.jsxs("div", {
             className: "pt-2 flex flex-col sm:flex-row items-center justify-center gap-3",
@@ -332,7 +344,18 @@ const Sessions = () => {
                   color: "#0a0a0a"
                 },
                 children: hasActiveSession ? "Continue Active Session →" : "Open Match Tracker"
-              })
+              }),
+              !user?.uid &&
+                u.jsx(Link, {
+                  to: ROUTES.LOGIN,
+                  className:
+                    "w-full sm:w-auto inline-flex items-center justify-center px-5 py-3 rounded-xl font-bold text-sm border-2 transition-colors hover:bg-white/10",
+                  style: {
+                    borderColor: "#DAA520",
+                    color: "#ffffff"
+                  },
+                  children: "Sign in to Save"
+                })
             ]
           })
         ]

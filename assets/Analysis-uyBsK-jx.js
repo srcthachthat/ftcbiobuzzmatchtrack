@@ -27,10 +27,17 @@ import {
   j as u
 } from "./index-CrUxzRby.js";
 
-function readLocalSavedSessions() {
+function readLocalSavedSessions(uid) {
+  if (!uid) {
+    try {
+      localStorage.removeItem("src28785-saved-sessions-v2");
+      localStorage.removeItem("src28785-guest-sessions");
+    } catch {}
+    return [];
+  }
   const map = new Map();
   try {
-    const v2Raw = localStorage.getItem("src28785-saved-sessions-v2");
+    const v2Raw = localStorage.getItem(`src28785-saved-sessions-v2-${uid}`);
     const v2List = v2Raw ? JSON.parse(v2Raw) : [];
     if (Array.isArray(v2List)) {
       for (const s of v2List) {
@@ -38,23 +45,16 @@ function readLocalSavedSessions() {
       }
     }
   } catch {}
-  try {
-    const guestList = getGuestSessions() || [];
-    if (Array.isArray(guestList)) {
-      for (const s of guestList) {
-        if (s && s.id && !map.has(s.id)) map.set(s.id, s);
-      }
-    }
-  } catch {}
   return [...map.values()];
 }
 
-function writeLocalSavedSessions(list) {
+function writeLocalSavedSessions(uid, list) {
   try {
-    localStorage.setItem("src28785-saved-sessions-v2", JSON.stringify(list));
-  } catch {}
-  try {
-    setGuestSessions(list);
+    localStorage.removeItem("src28785-saved-sessions-v2");
+    localStorage.removeItem("src28785-guest-sessions");
+    if (uid) {
+      localStorage.setItem(`src28785-saved-sessions-v2-${uid}`, JSON.stringify(list));
+    }
   } catch {}
 }
 
@@ -494,12 +494,12 @@ const Analysis = () => {
     const load = async () => {
       setLoading(true);
       try {
-        const localSessions = readLocalSavedSessions();
+        const localSessions = readLocalSavedSessions(user?.uid);
         let found = sessionId
           ? localSessions.find((s) => s.id === sessionId)
           : localSessions[0] || null;
 
-        if (!found && sessionId && !sessionId.startsWith("guest_")) {
+        if (!found && sessionId && user?.uid && !sessionId.startsWith("guest_")) {
           const timeoutPromise = new Promise((r) => setTimeout(() => r(null), 2500));
           found = await Promise.race([firebaseService.getSession(sessionId), timeoutPromise]);
         }
@@ -533,13 +533,14 @@ const Analysis = () => {
 
   const persistSessionUpdate = (updatedSession) => {
     setSession(updatedSession);
+    if (!user?.uid) return;
     try {
-      const localList = readLocalSavedSessions();
+      const localList = readLocalSavedSessions(user.uid);
       const exists = localList.some((s) => s.id === updatedSession.id);
       const nextList = exists
         ? localList.map((s) => (s.id === updatedSession.id ? updatedSession : s))
         : [updatedSession, ...localList];
-      writeLocalSavedSessions(nextList);
+      writeLocalSavedSessions(user.uid, nextList);
     } catch {}
     if (user?.uid && !String(updatedSession.id).startsWith("guest_")) {
       firebaseService
