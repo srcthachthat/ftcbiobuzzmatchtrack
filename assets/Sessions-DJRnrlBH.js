@@ -102,7 +102,7 @@ const Sessions = () => {
   const [renameText, setRenameText] = React.useState("");
 
   React.useEffect(() => {
-    document.title = "Sessions - Scienceroboticsclub 28785";
+    document.title = "SRCmatchtrack";
     try {
       const aud = window.__src28785_match_audio__;
       if (aud) {

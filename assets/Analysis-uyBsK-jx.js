@@ -515,9 +515,7 @@ const Analysis = () => {
         }
         if (!cancelled) {
           setSession(found || null);
-          if (found?.sessionName) {
-            document.title = `${found.sessionName} - Scienceroboticsclub 28785`;
-          }
+          document.title = "SRCmatchtrack";
         }
       } catch (e) {
         console.error("Error loading session for analysis:", e);
