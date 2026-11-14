@@ -78,10 +78,11 @@ export const ActiveTutorial = ({ openOnMount = false }) => {
     isPickupPaused,
     setIsPickupPaused,
     editingMatchId,
-    setEditingMatchId,
-    setIsTutorialActive
+    returnToCurrentMatch,
+    startEditingMatch,
+    setIsTutorialActive,
+    setTimer
   } = session;
-  const { setTimer } = clock;
 
   const [open, setOpen] = c.useState(() => {
     try {
@@ -124,8 +125,12 @@ export const ActiveTutorial = ({ openOnMount = false }) => {
     snapshotRef.current = null;
     try {
       setIsTimerRunning(false);
-      setEditingMatchId(snap.editingMatchId ?? null);
+      if (typeof returnToCurrentMatch === "function") returnToCurrentMatch();
       updateSessionData(snap.sessionData);
+      if (snap.editingMatchId && typeof startEditingMatch === "function") {
+        const m = (snap.sessionData?.matches || []).find((x) => x.id === snap.editingMatchId);
+        if (m) startEditingMatch(m);
+      }
       setMatchActive(snap.matchActive);
       setMatchPhase(snap.matchPhase);
       setIsPickupPaused(snap.isPickupPaused);
@@ -133,7 +138,7 @@ export const ActiveTutorial = ({ openOnMount = false }) => {
         setTimer(snap.timer);
       }
     } catch {}
-  }, [setIsTimerRunning, setEditingMatchId, updateSessionData, setMatchActive, setMatchPhase, setIsPickupPaused, setTimer]);
+  }, [setIsTimerRunning, returnToCurrentMatch, startEditingMatch, updateSessionData, setMatchActive, setMatchPhase, setIsPickupPaused, setTimer]);
 
   const startTutorial = c.useCallback(() => {
     try {
@@ -179,85 +184,89 @@ export const ActiveTutorial = ({ openOnMount = false }) => {
   // Apply simulated UI state for each tutorial step so controls unlock just like the video
   c.useEffect(() => {
     if (!open) return;
-    setEditingMatchId(null);
-    setIsTimerRunning(false);
+    try {
+      if (typeof returnToCurrentMatch === "function") returnToCurrentMatch();
+      setIsTimerRunning(false);
 
-    if (stepIdx === 0) {
-      setMatchActive(false);
-      setMatchPhase("auton");
-      if (typeof setTimer === "function") setTimer(150);
-      updateSessionData({
-        sessionName: (snapshotRef.current?.sessionData?.sessionName || "Match 1"),
-        matchType: "Full Game",
-        sessionType: "Match",
-        robots: 2,
-        matches: [],
-        tipping: 0,
-        robot1Leave: false,
-        robot1ParkAuto: false,
-        robot1ParkTeleop: false,
-        robot2Leave: false,
-        robot2ParkAuto: false,
-        robot2ParkTeleop: false,
-        minorPenalties: 0,
-        majorPenalties: 0,
-        flower: 0,
-        flowerBonus: 0,
-        ballsInHive: 0,
-        garden: 0
-      });
-    } else if (stepIdx === 1) {
-      setMatchActive(true);
-      setMatchPhase("teleop");
-      if (typeof setTimer === "function") setTimer(105);
-    } else if (stepIdx === 2) {
-      setMatchActive(true);
-      setMatchPhase("ended");
-      if (typeof setTimer === "function") setTimer(0);
-    } else if (stepIdx === 3) {
-      setMatchActive(true);
-      setMatchPhase("ended");
-      if (typeof setTimer === "function") setTimer(0);
-      if ((sessionData.tipping ?? 0) === 0 && !sessionData.robot1Leave && (sessionData.flower ?? 0) === 0) {
+      if (stepIdx === 0) {
+        setMatchActive(false);
+        setMatchPhase("auton");
+        if (typeof setTimer === "function") setTimer(150);
         updateSessionData({
-          tipping: 4,
-          robot1Leave: true,
-          robot1ParkAuto: true,
-          robot2Leave: true,
-          robot2ParkTeleop: true,
-          flower: 4,
-          flowerBonus: 2,
-          ballsInHive: 2,
-          garden: 3
+          sessionName: (snapshotRef.current?.sessionData?.sessionName || "Match 1"),
+          matchType: "Full Game",
+          sessionType: "Match",
+          robotCount: 2,
+          matches: [],
+          tipping: 0,
+          robot1Leave: false,
+          robot1ParkAuto: false,
+          robot1ParkTeleop: false,
+          robot2Leave: false,
+          robot2ParkAuto: false,
+          robot2ParkTeleop: false,
+          minorPenalties: 0,
+          majorPenalties: 0,
+          flower: 0,
+          flowerBonus: 0,
+          ballsInHive: 0,
+          garden: 0
         });
-      }
-    } else if (stepIdx === 4) {
-      setMatchActive(false);
-      setMatchPhase("auton");
-      if (typeof setTimer === "function") setTimer(150);
-      updateSessionData({
-        matches: [
-          {
-            id: "tutorial-sample-1",
-            matchNumber: 1,
-            matchType: "Full Game",
-            totalScore: 125,
+      } else if (stepIdx === 1) {
+        setMatchActive(true);
+        setMatchPhase("teleop");
+        if (typeof setTimer === "function") setTimer(105);
+      } else if (stepIdx === 2) {
+        setMatchActive(true);
+        setMatchPhase("ended");
+        if (typeof setTimer === "function") setTimer(0);
+      } else if (stepIdx === 3) {
+        setMatchActive(true);
+        setMatchPhase("ended");
+        if (typeof setTimer === "function") setTimer(0);
+        if ((sessionData.tipping ?? 0) === 0 && !sessionData.robot1Leave && (sessionData.flower ?? 0) === 0) {
+          updateSessionData({
             tipping: 4,
             robot1Leave: true,
             robot1ParkAuto: true,
-            robot1ParkTeleop: false,
             robot2Leave: true,
-            robot2ParkAuto: false,
             robot2ParkTeleop: true,
             flower: 4,
             flowerBonus: 2,
             ballsInHive: 2,
-            garden: 3,
-            minorPenalties: 0,
-            majorPenalties: 0
-          }
-        ]
-      });
+            garden: 3
+          });
+        }
+      } else if (stepIdx === 4) {
+        setMatchActive(false);
+        setMatchPhase("auton");
+        if (typeof setTimer === "function") setTimer(150);
+        updateSessionData({
+          matches: [
+            {
+              id: "tutorial-sample-1",
+              matchNumber: 1,
+              matchType: "Full Game",
+              finalScore: 125,
+              tipping: 4,
+              robot1Leave: true,
+              robot1ParkAuto: true,
+              robot1ParkTeleop: false,
+              robot2Leave: true,
+              robot2ParkAuto: false,
+              robot2ParkTeleop: true,
+              flower: 4,
+              flowerBonus: 2,
+              ballsInHive: 2,
+              garden: 3,
+              minorPenalties: 0,
+              majorPenalties: 0
+            }
+          ]
+        });
+      }
+    } catch (err) {
+      console.error("Tutorial step state error:", err);
     }
   }, [open, stepIdx]);
 
