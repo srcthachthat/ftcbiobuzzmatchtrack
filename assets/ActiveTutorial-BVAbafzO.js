@@ -1,5 +1,5 @@
 import { r as c } from "./vendor-react-BrRUuK2M.js";
-import { j as u, ar as useSession, bQ as useClock, S as V, bd as START_EVENT } from "./index-CrUxzRby.js";
+import { j as u, ar as useSession, S as V, bd as START_EVENT } from "./index-CrUxzRby.js";
 
 const STEPS = [
   {
@@ -54,35 +54,34 @@ const STEPS = [
     selectors: ['[data-tutorial="controls"]'],
     placement: "below-target",
     body: [
-      "Bấm Save Match sau mỗi trận để lưu vào danh sách. Khi đấu xong, bấm Complete Session để lưu toàn bộ phiên về trang Sessions.",
+      "Bấm Save Match sau mỗi trận để lưu vào danh sách. Khi đấu xong, bấm Complete Session để lưu toàn bộ phiên về trang Sessions (yêu cầu đăng nhập Gmail/tài khoản).",
       "Tại trang Sessions, bấm vào bất kỳ phiên nào để mở trang Analysis xem Biểu đồ xu hướng, sửa lại điểm từng trận hoặc Xuất file CSV."
     ],
-    note: "Nếu đang đấu dở mà thoát ra trang Sessions, đồng hồ sẽ tự dừng và trận đang dở sẽ bị hủy."
+    note: "Nếu chưa đăng nhập mà thoát web hoặc đang đấu dở mà bấm Leave, dữ liệu đang dở sẽ tự hủy."
   }
 ];
 
 const PAD = 8;
 
+function sameRects(a, b) {
+  if (a.length !== b.length) return false;
+  for (let i = 0; i < a.length; i++) {
+    if (
+      Math.abs(a[i].top - b[i].top) > 1 ||
+      Math.abs(a[i].left - b[i].left) > 1 ||
+      Math.abs(a[i].width - b[i].width) > 1 ||
+      Math.abs(a[i].height - b[i].height) > 1
+    ) {
+      return false;
+    }
+  }
+  return true;
+}
+
 export const ActiveTutorial = ({ openOnMount = false }) => {
   const session = useSession();
-  const clock = useClock();
-  const {
-    sessionData,
-    updateSessionData,
-    matchActive,
-    setMatchActive,
-    matchPhase,
-    setMatchPhase,
-    isTimerRunning,
-    setIsTimerRunning,
-    isPickupPaused,
-    setIsPickupPaused,
-    editingMatchId,
-    returnToCurrentMatch,
-    startEditingMatch,
-    setIsTutorialActive,
-    setTimer
-  } = session;
+  const sessionRef = c.useRef(session);
+  sessionRef.current = session;
 
   const [open, setOpen] = c.useState(() => {
     try {
@@ -104,67 +103,69 @@ export const ActiveTutorial = ({ openOnMount = false }) => {
 
   const captureSnapshot = c.useCallback(() => {
     if (snapshotRef.current) return;
+    const s = sessionRef.current;
     let currentTimer = 150;
     try {
-      currentTimer = session.getTimers ? session.getTimers().timer : clock.timer;
+      currentTimer = s.getTimers ? s.getTimers().timer : 150;
     } catch {}
     snapshotRef.current = {
-      sessionData: JSON.parse(JSON.stringify(sessionData)),
-      matchActive,
-      matchPhase,
-      isTimerRunning,
-      isPickupPaused,
-      editingMatchId,
+      sessionData: JSON.parse(JSON.stringify(s.sessionData)),
+      matchActive: s.matchActive,
+      matchPhase: s.matchPhase,
+      isTimerRunning: s.isTimerRunning,
+      isPickupPaused: s.isPickupPaused,
+      editingMatchId: s.editingMatchId,
       timer: currentTimer
     };
-  }, [sessionData, matchActive, matchPhase, isTimerRunning, isPickupPaused, editingMatchId, session, clock]);
+  }, []);
 
   const restoreSnapshot = c.useCallback(() => {
     const snap = snapshotRef.current;
     if (!snap) return;
     snapshotRef.current = null;
+    const s = sessionRef.current;
     try {
-      setIsTimerRunning(false);
-      if (typeof returnToCurrentMatch === "function") returnToCurrentMatch();
-      updateSessionData(snap.sessionData);
-      if (snap.editingMatchId && typeof startEditingMatch === "function") {
+      s.setIsTimerRunning(false);
+      if (typeof s.returnToCurrentMatch === "function") s.returnToCurrentMatch();
+      s.updateSessionData(snap.sessionData);
+      if (snap.editingMatchId && typeof s.startEditingMatch === "function") {
         const m = (snap.sessionData?.matches || []).find((x) => x.id === snap.editingMatchId);
-        if (m) startEditingMatch(m);
+        if (m) s.startEditingMatch(m);
       }
-      setMatchActive(snap.matchActive);
-      setMatchPhase(snap.matchPhase);
-      setIsPickupPaused(snap.isPickupPaused);
-      if (typeof setTimer === "function" && typeof snap.timer === "number") {
-        setTimer(snap.timer);
+      s.setMatchActive(snap.matchActive);
+      s.setMatchPhase(snap.matchPhase);
+      s.setIsPickupPaused(snap.isPickupPaused);
+      if (typeof s.setTimer === "function" && typeof snap.timer === "number") {
+        s.setTimer(snap.timer);
       }
     } catch {}
-  }, [setIsTimerRunning, returnToCurrentMatch, startEditingMatch, updateSessionData, setMatchActive, setMatchPhase, setIsPickupPaused, setTimer]);
+  }, []);
 
   const startTutorial = c.useCallback(() => {
     try {
       sessionStorage.removeItem(V.START_TUTORIAL);
     } catch {}
     captureSnapshot();
-    setIsTutorialActive(true);
+    sessionRef.current.setIsTutorialActive(true);
     setStepIdx(0);
     setOpen(true);
-  }, [captureSnapshot, setIsTutorialActive]);
+  }, [captureSnapshot]);
 
   const closeTutorial = c.useCallback(() => {
     setOpen(false);
     restoreSnapshot();
-    setIsTutorialActive(false);
+    sessionRef.current.setIsTutorialActive(false);
     try {
       localStorage.setItem(V.TUTORIAL_SEEN, "true");
     } catch {}
-  }, [restoreSnapshot, setIsTutorialActive]);
+  }, [restoreSnapshot]);
 
   c.useEffect(() => {
     if (open) {
       captureSnapshot();
-      setIsTutorialActive(true);
+      sessionRef.current.setIsTutorialActive(true);
     }
-  }, [open, captureSnapshot, setIsTutorialActive]);
+  }, [open, captureSnapshot]);
 
   c.useEffect(() => {
     const onStartEvent = () => startTutorial();
@@ -176,24 +177,53 @@ export const ActiveTutorial = ({ openOnMount = false }) => {
     return () => {
       if (snapshotRef.current) {
         restoreSnapshot();
-        setIsTutorialActive(false);
+        sessionRef.current.setIsTutorialActive(false);
       }
     };
-  }, [restoreSnapshot, setIsTutorialActive]);
+  }, [restoreSnapshot]);
 
-  // Apply simulated UI state for each tutorial step so controls unlock just like the video
+  const measureTargets = c.useCallback(() => {
+    if (!open) return;
+    const step = STEPS[stepIdx];
+    if (!step) return;
+    const found = [];
+    for (const sel of step.selectors) {
+      const nodes = document.querySelectorAll(sel);
+      for (const el of nodes) {
+        if (!(el instanceof HTMLElement)) continue;
+        const r = el.getBoundingClientRect();
+        if (r.width > 4 && r.height > 4) {
+          found.push({
+            top: Math.round(r.top - PAD),
+            left: Math.round(r.left - PAD),
+            width: Math.round(r.width + PAD * 2),
+            height: Math.round(r.height + PAD * 2),
+            bottom: Math.round(r.bottom + PAD),
+            right: Math.round(r.right + PAD)
+          });
+        }
+      }
+    }
+    setRects((prev) => (sameRects(prev, found) ? prev : found));
+    const nw = window.innerWidth;
+    const nh = window.innerHeight;
+    setViewport((prev) => (prev.w === nw && prev.h === nh ? prev : { w: nw, h: nh }));
+  }, [open, stepIdx]);
+
+  // Apply simulated UI state for each tutorial step once per step change
   c.useEffect(() => {
     if (!open) return;
+    const s = sessionRef.current;
     try {
-      if (typeof returnToCurrentMatch === "function") returnToCurrentMatch();
-      setIsTimerRunning(false);
+      if (typeof s.returnToCurrentMatch === "function") s.returnToCurrentMatch();
+      s.setIsTimerRunning(false);
 
       if (stepIdx === 0) {
-        setMatchActive(false);
-        setMatchPhase("auton");
-        if (typeof setTimer === "function") setTimer(150);
-        updateSessionData({
-          sessionName: (snapshotRef.current?.sessionData?.sessionName || "Match 1"),
+        s.setMatchActive(false);
+        s.setMatchPhase("auton");
+        if (typeof s.setTimer === "function") s.setTimer(150);
+        s.updateSessionData({
+          sessionName: snapshotRef.current?.sessionData?.sessionName || "Match 1",
           matchType: "Full Game",
           sessionType: "Match",
           robotCount: 2,
@@ -213,19 +243,20 @@ export const ActiveTutorial = ({ openOnMount = false }) => {
           garden: 0
         });
       } else if (stepIdx === 1) {
-        setMatchActive(true);
-        setMatchPhase("teleop");
-        if (typeof setTimer === "function") setTimer(105);
+        s.setMatchActive(true);
+        s.setMatchPhase("teleop");
+        if (typeof s.setTimer === "function") s.setTimer(105);
       } else if (stepIdx === 2) {
-        setMatchActive(true);
-        setMatchPhase("ended");
-        if (typeof setTimer === "function") setTimer(0);
+        s.setMatchActive(true);
+        s.setMatchPhase("ended");
+        if (typeof s.setTimer === "function") s.setTimer(0);
       } else if (stepIdx === 3) {
-        setMatchActive(true);
-        setMatchPhase("ended");
-        if (typeof setTimer === "function") setTimer(0);
-        if ((sessionData.tipping ?? 0) === 0 && !sessionData.robot1Leave && (sessionData.flower ?? 0) === 0) {
-          updateSessionData({
+        s.setMatchActive(true);
+        s.setMatchPhase("ended");
+        if (typeof s.setTimer === "function") s.setTimer(0);
+        const cur = s.sessionData || {};
+        if ((cur.tipping ?? 0) === 0 && !cur.robot1Leave && (cur.flower ?? 0) === 0) {
+          s.updateSessionData({
             tipping: 4,
             robot1Leave: true,
             robot1ParkAuto: true,
@@ -238,10 +269,10 @@ export const ActiveTutorial = ({ openOnMount = false }) => {
           });
         }
       } else if (stepIdx === 4) {
-        setMatchActive(false);
-        setMatchPhase("auton");
-        if (typeof setTimer === "function") setTimer(150);
-        updateSessionData({
+        s.setMatchActive(false);
+        s.setMatchPhase("auton");
+        if (typeof s.setTimer === "function") s.setTimer(150);
+        s.updateSessionData({
           matches: [
             {
               id: "tutorial-sample-1",
@@ -268,33 +299,10 @@ export const ActiveTutorial = ({ openOnMount = false }) => {
     } catch (err) {
       console.error("Tutorial step state error:", err);
     }
-  }, [open, stepIdx]);
 
-  const measureTargets = c.useCallback(() => {
-    if (!open) return;
-    const step = STEPS[stepIdx];
-    if (!step) return;
-    const found = [];
-    for (const sel of step.selectors) {
-      const nodes = document.querySelectorAll(sel);
-      for (const el of nodes) {
-        if (!(el instanceof HTMLElement)) continue;
-        const r = el.getBoundingClientRect();
-        if (r.width > 4 && r.height > 4) {
-          found.push({
-            top: r.top - PAD,
-            left: r.left - PAD,
-            width: r.width + PAD * 2,
-            height: r.height + PAD * 2,
-            bottom: r.bottom + PAD,
-            right: r.right + PAD
-          });
-        }
-      }
-    }
-    setRects(found);
-    setViewport({ w: window.innerWidth, h: window.innerHeight });
-  }, [open, stepIdx]);
+    const rafId = requestAnimationFrame(measureTargets);
+    return () => cancelAnimationFrame(rafId);
+  }, [open, stepIdx, measureTargets]);
 
   // Scroll highlighted element into view smoothly when step changes
   c.useEffect(() => {
@@ -326,20 +334,23 @@ export const ActiveTutorial = ({ openOnMount = false }) => {
     measureTargets();
     let raf = 0;
     const schedule = () => {
-      cancelAnimationFrame(raf);
-      raf = requestAnimationFrame(measureTargets);
+      if (raf) return;
+      raf = requestAnimationFrame(() => {
+        raf = 0;
+        measureTargets();
+      });
     };
     window.addEventListener("scroll", schedule, { passive: true });
     window.addEventListener("resize", schedule);
     const ro = new ResizeObserver(schedule);
     ro.observe(document.body);
     return () => {
-      cancelAnimationFrame(raf);
+      if (raf) cancelAnimationFrame(raf);
       window.removeEventListener("scroll", schedule);
       window.removeEventListener("resize", schedule);
       ro.disconnect();
     };
-  }, [open, stepIdx, sessionData, matchActive, matchPhase, measureTargets]);
+  }, [open, stepIdx, measureTargets]);
 
   // Keyboard shortcuts: Escape to close, ArrowRight / ArrowLeft to navigate
   c.useEffect(() => {
@@ -436,7 +447,7 @@ export const ActiveTutorial = ({ openOnMount = false }) => {
           "div",
           {
             "aria-hidden": "true",
-            className: "fixed pointer-events-none rounded-[18px] transition-all duration-200",
+            className: "fixed pointer-events-none rounded-[18px]",
             style: {
               zIndex: 9991,
               top: `${r.top}px`,
@@ -456,7 +467,7 @@ export const ActiveTutorial = ({ openOnMount = false }) => {
         "aria-modal": "false",
         "aria-label": step.title,
         "data-tutorial-card": "true",
-        className: "rounded-2xl border-2 p-5 transition-all duration-200",
+        className: "rounded-2xl border-2 p-5",
         style: cardStyle,
         children: [
           u.jsxs("div", {
