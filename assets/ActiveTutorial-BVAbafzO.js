@@ -4,60 +4,60 @@ import { j as u, ar as useSession, S as V, bd as START_EVENT } from "./index-CrU
 const STEPS = [
   {
     id: "start",
-    title: "Bắt đầu trận đấu (Start a Match)",
+    title: "Start a Match",
     selectors: ['[data-tutorial="timer"]', '[data-tutorial="controls"]'],
     placement: "bottom-right",
     body: [
-      "Bấm Start Match để chạy đồng hồ đếm ngược 2:30 (0:30 Auto → 3s nhặt tay cầm → 2:00 Teleop) kèm âm thanh sân đấu chuẩn FTC.",
-      "Bấm nút ⋮ ở góc phải để Đổi tên (Rename), chọn chế độ đấu (Full Game, Autonomous, Teleop) hoặc hủy phiên."
+      "Press Start Match to run the 2:30 countdown timer (0:30 Auto → 3s controller pickup → 2:00 Teleop) with official FTC field audio.",
+      "Click the ⋮ button on the right to Rename the session, switch Match Type (Full Game, Autonomous, Teleop), or discard the session."
     ],
-    note: "Mọi thao tác bấm thử trong hướng dẫn này đều không làm ảnh hưởng dữ liệu thật."
+    note: "Everything you click in this tutorial is simulated and won't affect your saved data."
   },
   {
     id: "live",
-    title: "Ghi điểm trong trận (Hive Tips, Robot & Fouls)",
+    title: "Live Scoring (Hive Tips, Robots & Fouls)",
     selectors: ['[data-tutorial="live"]'],
     placement: "bottom-right",
     body: [
-      "Ô Hive Tips (+20đ/tip): Bấm +1 Tip hoặc -1 Tip ngay trong ô (hoặc phím tắt T) để cộng/trừ điểm và tự động đo Cycle Time.",
-      "Robot 1 & Robot 2: Tích chọn Leave (+3đ), Park (Auto) (+5đ), Park (End) (+5đ). Ô FOULS ghi nhận lỗi Minor (+5đ) và Major (+20đ cho đối thủ)."
+      "Hive Tips (+20 pts/tip): Click +1 Tip or -1 Tip inside the card (or press T while the timer runs) to adjust tips and track cycle times.",
+      "Robot 1 & Robot 2: Mark Leave (+3 pts), Park (Auto) (+5 pts), and Park (End) (+5 pts). Use FOULS to record Minor (+5 pts) and Major (+20 pts to opponent) penalties."
     ],
-    note: "Bạn có thể bấm thử trực tiếp vào các nút đang sáng! Trong trận có thể bấm Pause (phím P) hoặc Skip."
+    note: "Try clicking the highlighted buttons directly! During a match you can also Pause (shortcut P) or Skip phases."
   },
   {
     id: "end-of-match",
-    title: "Đếm điểm cuối trận (End of Match)",
+    title: "End-of-Match Scoring",
     selectors: ['[data-tutorial="end-of-match"]'],
     placement: "bottom-right",
     body: [
-      "Mở khóa khi hết giờ (buzzer) hoặc khi bấm Pause. Dùng nút - / + để đếm:",
-      "• Owned flower pieces (+2đ/mảnh) & Flower nectar at bottom (+5đ/hoa, tối đa 4).",
-      "• Left in Hive (+2đ/viên) & Garden (+1đ/mảnh)."
+      "Unlocks at the buzzer or when you pause the match. Use the - / + buttons to count:",
+      "• Owned flower pieces (+2 pts each) & Flower nectar at bottom (+5 pts each, max 4).",
+      "• Left in Hive (+2 pts each) & Garden (+1 pt each)."
     ],
-    note: "Hãy thử bấm nút + / - trên các ô đang sáng để xem điểm số tự động cộng."
+    note: "Try clicking + or - on the highlighted cards to see the score update live."
   },
   {
     id: "breakdown",
-    title: "Tổng điểm & Ranking Points (Total & RP)",
+    title: "Total Score & Ranking Points",
     selectors: ['[data-tutorial="breakdown"]', '[data-breakdown-card]'],
     placement: "top-right",
     body: [
-      "TOTAL tự động tổng hợp điểm số toàn trận theo thời gian thực.",
-      "• SWARM RP: Đạt khi tổng điểm Leave + Park của 2 robot đủ 16/16 điểm.",
-      "• POLLINATOR RP: Đạt mốc khi ghi được 4 hoặc 7 Hive Tips."
+      "TOTAL calculates your match score automatically in real time.",
+      "• SWARM RP: Earned when both robots reach 16/16 combined Leave + Park points.",
+      "• POLLINATOR RP: Earned when you reach 4 or 7 Hive Tips."
     ],
-    note: "Điểm lỗi FOULS của đội mình được hiển thị riêng (+pts to opponent)."
+    note: "Foul points committed by your alliance are shown separately (+pts to opponent)."
   },
   {
     id: "save-finish",
-    title: "Lưu trận, Hoàn tất & Xem Biểu đồ (Save & Finish)",
+    title: "Save Match & Complete Session",
     selectors: ['[data-tutorial="controls"]'],
     placement: "below-target",
     body: [
-      "Bấm Save Match sau mỗi trận để lưu vào danh sách. Khi đấu xong, bấm Complete Session để lưu toàn bộ phiên về trang Sessions (yêu cầu đăng nhập Gmail/tài khoản).",
-      "Tại trang Sessions, bấm vào bất kỳ phiên nào để mở trang Analysis xem Biểu đồ xu hướng, sửa lại điểm từng trận hoặc Xuất file CSV."
+      "Click Save Match after each match to record it in the Match Log. When done, click Complete Session to save the session to Sessions (requires signing in).",
+      "In Sessions, click any saved session to open Analysis for score trend charts, match editing, or CSV export."
     ],
-    note: "Nếu chưa đăng nhập mà thoát web hoặc đang đấu dở mà bấm Leave, dữ liệu đang dở sẽ tự hủy."
+    note: "If you are not signed in when closing the app, or if you leave a match early, unsaved progress is discarded."
   }
 ];
 
