@@ -194,54 +194,52 @@
         border: 1px solid rgba(218, 165, 32, 0.35) !important;
       }
 
-      /* Hive Tips -1 button & disabled controls: solid black with white text & gold border */
-      button[aria-label="−1 Tip"],
+      /* Hive Tips card & -1 Tip / +1 Tip inner buttons (Concept 5 Telemetry style, compact) */
+      [data-hive-tips-card],
       .honeycomb .dark\:bg-white\/\[0\.05\]:is(.dark *) {
-        background-color: #0c0c0c !important;
-        border: 2px solid #daa520 !important;
+        background-color: #141619 !important;
+        border: 2px solid #374151 !important;
         color: #ffffff !important;
         opacity: 1 !important;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.8) !important;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.85), inset 0 1px 0 rgba(255, 255, 255, 0.06) !important;
       }
-      button[aria-label="−1 Tip"]:disabled {
-        background-color: #121212 !important;
-        border: 2px solid rgba(218, 165, 32, 0.65) !important;
+      [data-hive-tips-card] [data-tip-btn] {
+        background-color: #1a1d21 !important;
+        border: 2px solid #facc15 !important;
         color: #ffffff !important;
+        opacity: 1 !important;
+      }
+      [data-hive-tips-card] [data-tip-btn]:hover:not(:disabled) {
+        background-color: #26210f !important;
+        border-color: #fde047 !important;
+        box-shadow: 0 0 10px rgba(250, 204, 21, 0.4) !important;
+      }
+      [data-hive-tips-card] [data-tip-btn]:disabled {
+        background-color: #141619 !important;
+        border: 1.5px solid rgba(250, 204, 21, 0.45) !important;
+        color: rgba(255, 255, 255, 0.5) !important;
+        opacity: 0.65 !important;
       }
 
-      /* +1 Tip inner button inside Hive Tips card */
-      [data-tutorial="live"] button > span.bg-white\/\[0\.07\] {
-        background-color: #1a1a1a !important;
-        border: 1.5px solid #daa520 !important;
-        color: #ffffff !important;
-      }
-
-      /* Robot 1 / Robot 2 panel & Leave / Park buttons: solid black card, white text */
+      /* Robot 1 / Robot 2 panel & emerald green toggle switches (Concept 5 style) */
       [data-tutorial="robots"] {
-        background-color: #0c0c0c !important;
-        border: 2px solid #daa520 !important;
-        border-radius: 1rem !important;
-        padding: 0.75rem 1rem !important;
-        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.8) !important;
+        background-color: #141619 !important;
+        border: 2px solid #374151 !important;
+        border-radius: 0.75rem !important;
+        padding: 0 !important;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.85), inset 0 1px 0 rgba(255, 255, 255, 0.06) !important;
       }
       [data-tutorial="robots"] span,
       [data-tutorial="robots"] p {
         color: #ffffff !important;
       }
       [data-tutorial="robots"] button[role="checkbox"] {
-        background-color: #161616 !important;
-        border: 2px solid rgba(218, 165, 32, 0.65) !important;
+        background-color: transparent !important;
+        border: none !important;
         color: #ffffff !important;
       }
-      [data-tutorial="robots"] button[role="checkbox"][aria-checked="true"] {
-        background-color: #daa520 !important;
-        border-color: #ffd700 !important;
-        color: #000000 !important;
-        font-weight: 700 !important;
-      }
-      [data-tutorial="robots"] button[role="checkbox"][aria-checked="true"] span,
-      [data-tutorial="robots"] button[role="checkbox"][aria-checked="true"] svg {
-        color: #000000 !important;
+      [data-tutorial="robots"] button[role="checkbox"]:hover:not(:disabled) {
+        background-color: rgba(34, 197, 94, 0.1) !important;
       }
 
       /* Unlocks / Mark Park (End), count, then save status bar: solid black, white text, gold border */
@@ -256,14 +254,20 @@
         color: #ffffff !important;
       }
 
-      /* End of Match counters (Owned flower pieces, Flower nectar, Left in Hive, Garden) & Fouls */
-      [data-tutorial="end-of-match"] > div[role="group"],
-      [data-tutorial="penalties"] {
-        background-color: #0c0c0c !important;
-        border: 2px solid #daa520 !important;
-        border-radius: 1rem !important;
+      /* End of Match counters (Owned flower pieces to Garden) & Fouls (Concept 5 style) */
+      [data-tutorial="end-of-match"] > div[role="group"] {
+        background-color: #141619 !important;
+        border: 2px solid #374151 !important;
+        border-radius: 0.75rem !important;
         padding: 0.75rem 0.875rem !important;
-        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.8) !important;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.85), inset 0 1px 0 rgba(255, 255, 255, 0.06) !important;
+      }
+      [data-tutorial="penalties"] {
+        background-color: #141619 !important;
+        border: 2px solid #ef4444 !important;
+        border-radius: 0.75rem !important;
+        padding: 0 !important;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.85), 0 0 14px rgba(239, 68, 68, 0.2) !important;
       }
       [data-tutorial="end-of-match"] span,
       [data-tutorial="end-of-match"] p,
@@ -273,24 +277,32 @@
         color: #ffffff !important;
       }
       [data-joined] {
-        background-color: #161616 !important;
-        border: 1.5px solid #daa520 !important;
+        background-color: #0b0d10 !important;
+        border: 1.5px solid #4b5563 !important;
+      }
+      [data-tutorial="penalties"] [data-joined] {
+        border: 1.5px solid #ef4444 !important;
       }
       [data-joined] input {
-        background-color: #111111 !important;
+        background-color: #08090b !important;
         color: #ffffff !important;
-        border-color: rgba(218, 165, 32, 0.45) !important;
+        border-color: rgba(255, 255, 255, 0.14) !important;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
       }
       [data-joined] button {
-        background-color: #1a1a1a !important;
+        background-color: #1f242b !important;
         color: #ffffff !important;
       }
       [data-joined] button:hover:not(:disabled) {
-        background-color: #daa520 !important;
+        background-color: #facc15 !important;
         color: #000000 !important;
       }
+      [data-tutorial="penalties"] [data-joined] button:hover:not(:disabled) {
+        background-color: #ef4444 !important;
+        color: #ffffff !important;
+      }
       [data-joined] button:disabled {
-        color: rgba(255, 255, 255, 0.55) !important;
+        color: rgba(255, 255, 255, 0.45) !important;
       }
 
       /* Match timer & status bar & Session Notes card: solid black for high contrast */
